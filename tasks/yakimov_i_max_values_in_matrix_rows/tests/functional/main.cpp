@@ -13,13 +13,13 @@
 #include <vector>
 #include <utility>
 
-#include "example_processes/common/include/common.hpp"
-#include "example_processes/mpi/include/ops_mpi.hpp"
-#include "example_processes/seq/include/ops_seq.hpp"
+#include "yakimov_i_max_values_in_matrix_rows/common/include/common.hpp"
+#include "yakimov_i_max_values_in_matrix_rows/mpi/include/ops_mpi.hpp"
+#include "yakimov_i_max_values_in_matrix_rows/seq/include/ops_seq.hpp"
 #include "util/include/func_test_util.hpp"
 #include "util/include/util.hpp"
 
-namespace nesterov_a_test_task_processes {
+namespace yakimov_i_max_values_in_matrix_rows {
 
 class NesterovARunFuncTestsProcesses : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
  public:
@@ -33,14 +33,13 @@ class NesterovARunFuncTestsProcesses : public ppc::util::BaseRunFuncTests<InType
     int height = -1;
     int channels = -1;
     std::vector<uint8_t> img;
-    // Read image in RGB to ensure consistent channel count
+    // Read image
     {
-      std::string abs_path = ppc::util::GetAbsoluteTaskPath(PPC_ID_example_processes, "pic.jpg");
-      auto *data = stbi_load(abs_path.c_str(), &width, &height, &channels, STBI_rgb);
+      std::string abs_path = ppc::util::GetAbsoluteTaskPath(PPC_ID_yakimov_i_max_values_in_matrix_rows, "pic.jpg");
+      auto *data = stbi_load(abs_path.c_str(), &width, &height, &channels, 0);
       if (data == nullptr) {
         throw std::runtime_error("Failed to load image: " + std::string(stbi_failure_reason()));
       }
-      channels = STBI_rgb;
       img = std::vector<uint8_t>(data, data + (static_cast<ptrdiff_t>(width * height * channels)));
       stbi_image_free(data);
       if (std::cmp_not_equal(width, height)) {
@@ -73,8 +72,8 @@ TEST_P(NesterovARunFuncTestsProcesses, MatmulFromPic) {
 const std::array<TestType, 3> kTestParam = {std::make_tuple(3, "3"), std::make_tuple(5, "5"), std::make_tuple(7, "7")};
 
 const auto kTestTasksList =
-    std::tuple_cat(ppc::util::AddFuncTask<NesterovATestTaskMPI, InType>(kTestParam, PPC_SETTINGS_example_processes),
-                   ppc::util::AddFuncTask<NesterovATestTaskSEQ, InType>(kTestParam, PPC_SETTINGS_example_processes));
+    std::tuple_cat(ppc::util::AddFuncTask<YakimovIMaxValuesInMatrixRowsMPI, InType>(kTestParam, PPC_SETTINGS_yakimov_i_max_values_in_matrix_rows),
+                   ppc::util::AddFuncTask<YakimovIMaxValuesInMatrixRowsSEQ, InType>(kTestParam, PPC_SETTINGS_yakimov_i_max_values_in_matrix_rows));
 
 const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
 
@@ -84,4 +83,4 @@ INSTANTIATE_TEST_SUITE_P(PicMatrixTests, NesterovARunFuncTestsProcesses, kGtestV
 
 }  // namespace
 
-}  // namespace nesterov_a_test_task_processes
+}  // namespace yakimov_i_max_values_in_matrix_rows
