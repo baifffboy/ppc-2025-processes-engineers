@@ -5,8 +5,8 @@
 #include <numeric>
 #include <vector>
 
-#include "yakimov_i_max_values_in_matrix_rows/common/include/common.hpp"
 #include "util/include/util.hpp"
+#include "yakimov_i_max_values_in_matrix_rows/common/include/common.hpp"
 
 namespace yakimov_i_max_values_in_matrix_rows {
 

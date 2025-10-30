@@ -11,7 +11,6 @@
 #include <tuple>
 #include <utility>
 #include <vector>
-#include <utility>
 
 #include "example_processes/common/include/common.hpp"
 #include "example_processes/mpi/include/ops_mpi.hpp"

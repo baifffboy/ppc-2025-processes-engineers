@@ -11,13 +11,12 @@
 #include <tuple>
 #include <utility>
 #include <vector>
-#include <utility>
 
+#include "util/include/func_test_util.hpp"
+#include "util/include/util.hpp"
 #include "yakimov_i_max_values_in_matrix_rows/common/include/common.hpp"
 #include "yakimov_i_max_values_in_matrix_rows/mpi/include/ops_mpi.hpp"
 #include "yakimov_i_max_values_in_matrix_rows/seq/include/ops_seq.hpp"
-#include "util/include/func_test_util.hpp"
-#include "util/include/util.hpp"
 
 namespace yakimov_i_max_values_in_matrix_rows {
 
@@ -71,13 +70,15 @@ TEST_P(yakimov_i_max_values_in_matrix_rows_Func_Tests, MatmulFromPic) {
 
 const std::array<TestType, 3> kTestParam = {std::make_tuple(3, "3"), std::make_tuple(5, "5"), std::make_tuple(7, "7")};
 
-const auto kTestTasksList =
-    std::tuple_cat(ppc::util::AddFuncTask<YakimovIMaxValuesInMatrixRowsMPI, InType>(kTestParam, PPC_SETTINGS_yakimov_i_max_values_in_matrix_rows),
-                   ppc::util::AddFuncTask<YakimovIMaxValuesInMatrixRowsSEQ, InType>(kTestParam, PPC_SETTINGS_yakimov_i_max_values_in_matrix_rows));
+const auto kTestTasksList = std::tuple_cat(ppc::util::AddFuncTask<YakimovIMaxValuesInMatrixRowsMPI, InType>(
+                                               kTestParam, PPC_SETTINGS_yakimov_i_max_values_in_matrix_rows),
+                                           ppc::util::AddFuncTask<YakimovIMaxValuesInMatrixRowsSEQ, InType>(
+                                               kTestParam, PPC_SETTINGS_yakimov_i_max_values_in_matrix_rows));
 
 const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
 
-const auto kPerfTestName = yakimov_i_max_values_in_matrix_rows_Func_Tests::PrintFuncTestName<yakimov_i_max_values_in_matrix_rows_Func_Tests>;
+const auto kPerfTestName =
+    yakimov_i_max_values_in_matrix_rows_Func_Tests::PrintFuncTestName<yakimov_i_max_values_in_matrix_rows_Func_Tests>;
 
 INSTANTIATE_TEST_SUITE_P(PicMatrixTests, yakimov_i_max_values_in_matrix_rows_Func_Tests, kGtestValues, kPerfTestName);
 

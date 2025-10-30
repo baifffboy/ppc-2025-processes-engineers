@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 
+#include "util/include/perf_test_util.hpp"
 #include "yakimov_i_max_values_in_matrix_rows/common/include/common.hpp"
 #include "yakimov_i_max_values_in_matrix_rows/mpi/include/ops_mpi.hpp"
 #include "yakimov_i_max_values_in_matrix_rows/seq/include/ops_seq.hpp"
-#include "util/include/perf_test_util.hpp"
 
 namespace yakimov_i_max_values_in_matrix_rows {
 
@@ -29,7 +29,8 @@ TEST_P(yakimov_i_max_values_in_matrix_rows_Perf_Tests, RunPerfModes) {
 }
 
 const auto kAllPerfTasks =
-    ppc::util::MakeAllPerfTasks<InType, YakimovIMaxValuesInMatrixRowsMPI, YakimovIMaxValuesInMatrixRowsSEQ>(PPC_SETTINGS_yakimov_i_max_values_in_matrix_rows);
+    ppc::util::MakeAllPerfTasks<InType, YakimovIMaxValuesInMatrixRowsMPI, YakimovIMaxValuesInMatrixRowsSEQ>(
+        PPC_SETTINGS_yakimov_i_max_values_in_matrix_rows);
 
 const auto kGtestValues = ppc::util::TupleToGTestValues(kAllPerfTasks);
 
