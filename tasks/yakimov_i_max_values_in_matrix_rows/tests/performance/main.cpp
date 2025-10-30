@@ -7,7 +7,7 @@
 
 namespace yakimov_i_max_values_in_matrix_rows {
 
-class ExampleRunPerfTestProcesses : public ppc::util::BaseRunPerfTests<InType, OutType> {
+class yakimov_i_max_values_in_matrix_rows_Perf_Tests : public ppc::util::BaseRunPerfTests<InType, OutType> {
   const int kCount_ = 100;
   InType input_data_{};
 
@@ -24,7 +24,7 @@ class ExampleRunPerfTestProcesses : public ppc::util::BaseRunPerfTests<InType, O
   }
 };
 
-TEST_P(ExampleRunPerfTestProcesses, RunPerfModes) {
+TEST_P(yakimov_i_max_values_in_matrix_rows_Perf_Tests, RunPerfModes) {
   ExecuteTest(GetParam());
 }
 
@@ -33,8 +33,8 @@ const auto kAllPerfTasks =
 
 const auto kGtestValues = ppc::util::TupleToGTestValues(kAllPerfTasks);
 
-const auto kPerfTestName = ExampleRunPerfTestProcesses::CustomPerfTestName;
+const auto kPerfTestName = yakimov_i_max_values_in_matrix_rows_Perf_Tests::CustomPerfTestName;
 
-INSTANTIATE_TEST_SUITE_P(RunModeTests, ExampleRunPerfTestProcesses, kGtestValues, kPerfTestName);
+INSTANTIATE_TEST_SUITE_P(RunModeTests, yakimov_i_max_values_in_matrix_rows_Perf_Tests, kGtestValues, kPerfTestName);
 
 }  // namespace yakimov_i_max_values_in_matrix_rows
