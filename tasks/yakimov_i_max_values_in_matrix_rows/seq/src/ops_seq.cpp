@@ -2,59 +2,96 @@
 
 #include <numeric>
 #include <vector>
+#include <iostream>
+#include <string>
+#include <vector>
+#include <algorithm>
+#include <fstream>
 
 #include "util/include/util.hpp"
 #include "yakimov_i_max_values_in_matrix_rows/common/include/common.hpp"
 
 namespace yakimov_i_max_values_in_matrix_rows {
 
-YakimovIMaxValuesInMatrixRowsSEQ::YakimovIMaxValuesInMatrixRowsSEQ(const InType &in) {
-  SetTypeOfTask(GetStaticTypeOfTask());
-  GetInput() = in;
-  GetOutput() = 0;
-}
+  YakimovIMaxValuesInMatrixRowsSEQ::YakimovIMaxValuesInMatrixRowsSEQ(const InType &in) {
+    SetTypeOfTask(GetStaticTypeOfTask());
+    GetInput() = in;
+    GetOutput() = 0;
 
-bool YakimovIMaxValuesInMatrixRowsSEQ::ValidationImpl() {
-  return (GetInput() > 0) && (GetOutput() == 0);
-}
-
-bool YakimovIMaxValuesInMatrixRowsSEQ::PreProcessingImpl() {
-  GetOutput() = 2 * GetInput();
-  return GetOutput() > 0;
-}
-
-bool YakimovIMaxValuesInMatrixRowsSEQ::RunImpl() {
-  if (GetInput() == 0) {
-    return false;
+    matrixFilename = "data/matrix" + std::to_string(GetInput()) + ".txt";
   }
 
-  for (InType i = 0; i < GetInput(); i++) {
-    for (InType j = 0; j < GetInput(); j++) {
-      for (InType k = 0; k < GetInput(); k++) {
-        std::vector<InType> tmp(i + j + k, 1);
-        GetOutput() += std::accumulate(tmp.begin(), tmp.end(), 0);
-        GetOutput() -= i + j + k;
+  bool YakimovIMaxValuesInMatrixRowsSEQ::ValidationImpl() {
+    return (GetInput() > 0) && (GetOutput() == 0);
+  }
+
+  bool YakimovIMaxValuesInMatrixRowsSEQ::PreProcessingImpl() {
+
+    if (!ReadMatrixFromFile(matrixFilename)) {
+      std::cerr << "Error: Cannot read matrix from file " << matrixFilename << std::endl;
+      return false;
+    }
+
+    matrix.resize(rows);
+    return true;
+  }
+
+  bool YakimovIMaxValuesInMatrixRowsSEQ::ReadMatrixFromFile(const std::string& filename) {
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+      std::cerr << "Error: Cannot open file " << filename << std::endl;
+      return false;
+    }
+    
+    file >> rows >> cols;
+    
+    if (rows == 0 || cols == 0) {
+      std::cerr << "Error: Invalid matrix rows or columns in file " << filename << std::endl;
+      return false;
+    }
+    
+    matrix.resize(rows);
+    for (size_t i = 0; i < rows; i++) {
+      matrix[i].resize(cols);
+    }
+    
+    for (size_t i = 0; i < rows; i++) {
+      for (size_t j = 0; j < cols; j++) {
+        if (!(file >> matrix[i][j])) {
+          std::cerr << "Error: Cannot read matrix element on position " << i << ", " << j << std::endl;
+          return false;
+        }
       }
     }
+    
+    file.close(); 
+    return true;
   }
 
-  const int num_threads = ppc::util::GetNumThreads();
-  GetOutput() *= num_threads;
+  bool YakimovIMaxValuesInMatrixRowsSEQ::RunImpl() {
+    if (matrix.empty()) {
+      return false;
+    }
 
-  int counter = 0;
-  for (int i = 0; i < num_threads; i++) {
-    counter++;
+    for (size_t i = 0; i < rows; i++) {
+      if (matrix[i].empty()) {
+        return false;
+      }
+      
+      maxValues[i] = matrix[i][0];
+      
+      for (size_t j = 1; j < cols; j++) {
+        if (matrix[i][j] > maxValues[i]) {
+          maxValues[i] = matrix[i][j];
+        }
+      }
+    }
+
+    return true;
   }
 
-  if (counter != 0) {
-    GetOutput() /= counter;
+  bool YakimovIMaxValuesInMatrixRowsSEQ::PostProcessingImpl() {
+    return true;
   }
-  return GetOutput() > 0;
-}
-
-bool YakimovIMaxValuesInMatrixRowsSEQ::PostProcessingImpl() {
-  GetOutput() -= GetInput();
-  return GetOutput() > 0;
-}
 
 }  // namespace yakimov_i_max_values_in_matrix_rows
