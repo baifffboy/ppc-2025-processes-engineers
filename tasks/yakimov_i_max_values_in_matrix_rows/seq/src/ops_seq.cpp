@@ -18,7 +18,7 @@ namespace yakimov_i_max_values_in_matrix_rows {
     GetInput() = in;
     GetOutput() = 0;
 
-    matrixFilename = "data/matrix" + std::to_string(GetInput()) + ".txt";
+    matrixFilename = "../../data/" + std::to_string(GetInput()) + ".txt";
   }
 
   bool YakimovIMaxValuesInMatrixRowsSEQ::ValidationImpl() {
