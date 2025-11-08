@@ -13,8 +13,6 @@
 namespace yakimov_i_max_values_in_matrix_rows {
 
 class yakimov_i_max_values_in_matrix_rows_Perf_Tests : public ppc::util::BaseRunPerfTests<InType, OutType> {
-  const int kCount_ = 100;
-  InType input_data_{};
 protected:
   void SetUp() override {
     input_data_ = 25;
