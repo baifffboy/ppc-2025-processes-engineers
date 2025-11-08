@@ -18,7 +18,7 @@ namespace yakimov_i_max_values_in_matrix_rows {
     GetInput() = in;
     GetOutput() = 0;
 
-    matrixFilename = "../../data/" + std::to_string(GetInput()) + ".txt";
+    matrixFilename = "/mnt/c/Users/ilya_/OneDrive/Рабочий стол/parallel_programming/ppc-2025-processes-engineers/tasks/yakimov_i_max_values_in_matrix_rows/data/" + std::to_string(GetInput()) + ".txt";
   }
 
   bool YakimovIMaxValuesInMatrixRowsSEQ::ValidationImpl() {
@@ -33,6 +33,7 @@ namespace yakimov_i_max_values_in_matrix_rows {
     }
 
     matrix.resize(rows);
+    maxValues.resize(rows);
     return true;
   }
 
