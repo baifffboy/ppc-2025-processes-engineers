@@ -49,12 +49,12 @@ TEST_P(yakimov_i_max_values_in_matrix_rows_Func_Tests, MatmulFromPic) {
   ExecuteTest(GetParam());
 }
 
-const std::array<TestType, 10> kTestParam = {
-  std::make_tuple(1, "small_1"), std::make_tuple(2, "small_2"), 
-  std::make_tuple(3, "small_3"), std::make_tuple(4, "small_4"),
-  std::make_tuple(5, "medium_1"), std::make_tuple(6, "medium_2"),
-  std::make_tuple(7, "medium_3"), std::make_tuple(8, "medium_4"),
-  std::make_tuple(9, "large_1"), std::make_tuple(10, "large_2")
+const std::array<TestType, 5> kTestParam = {
+  std::make_tuple(1, "very_small"),
+  std::make_tuple(5, "small"), 
+  std::make_tuple(10, "medium"),
+  std::make_tuple(15, "large"),
+  std::make_tuple(20, "very_large")
 };
 
 const auto kTestTasksList = std::tuple_cat(ppc::util::AddFuncTask<YakimovIMaxValuesInMatrixRowsMPI, InType>(
