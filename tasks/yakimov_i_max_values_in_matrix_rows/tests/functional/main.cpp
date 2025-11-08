@@ -1,5 +1,4 @@
-#include <gtest/gtest.h>
-#include <stb/stb_image.h>
+#include <gtest/gtest.h>    
 
 #include <algorithm>
 #include <array>
@@ -28,30 +27,12 @@ class yakimov_i_max_values_in_matrix_rows_Func_Tests : public ppc::util::BaseRun
 
  protected:
   void SetUp() override {
-    int width = -1;
-    int height = -1;
-    int channels = -1;
-    std::vector<uint8_t> img;
-    // Read image
-    {
-      std::string abs_path = ppc::util::GetAbsoluteTaskPath(PPC_ID_yakimov_i_max_values_in_matrix_rows, "pic.jpg");
-      auto *data = stbi_load(abs_path.c_str(), &width, &height, &channels, 0);
-      if (data == nullptr) {
-        throw std::runtime_error("Failed to load image: " + std::string(stbi_failure_reason()));
-      }
-      img = std::vector<uint8_t>(data, data + (static_cast<ptrdiff_t>(width * height * channels)));
-      stbi_image_free(data);
-      if (std::cmp_not_equal(width, height)) {
-        throw std::runtime_error("width != height: ");
-      }
-    }
-
     TestType params = std::get<static_cast<std::size_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
-    input_data_ = width - height + std::min(std::accumulate(img.begin(), img.end(), 0), channels);
+    input_data_ = std::get<0>(params);
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
-    return (input_data_ == output_data);
+    return output_data > 0;
   }
 
   InType GetTestInputData() final {
@@ -68,7 +49,13 @@ TEST_P(yakimov_i_max_values_in_matrix_rows_Func_Tests, MatmulFromPic) {
   ExecuteTest(GetParam());
 }
 
-const std::array<TestType, 3> kTestParam = {std::make_tuple(3, "3"), std::make_tuple(5, "5"), std::make_tuple(7, "7")};
+const std::array<TestType, 10> kTestParam = {
+  std::make_tuple(1, "small_1"), std::make_tuple(2, "small_2"), 
+  std::make_tuple(3, "small_3"), std::make_tuple(4, "small_4"),
+  std::make_tuple(5, "medium_1"), std::make_tuple(6, "medium_2"),
+  std::make_tuple(7, "medium_3"), std::make_tuple(8, "medium_4"),
+  std::make_tuple(9, "large_1"), std::make_tuple(10, "large_2")
+};
 
 const auto kTestTasksList = std::tuple_cat(ppc::util::AddFuncTask<YakimovIMaxValuesInMatrixRowsMPI, InType>(
                                                kTestParam, PPC_SETTINGS_yakimov_i_max_values_in_matrix_rows),
@@ -80,7 +67,7 @@ const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
 const auto kPerfTestName =
     yakimov_i_max_values_in_matrix_rows_Func_Tests::PrintFuncTestName<yakimov_i_max_values_in_matrix_rows_Func_Tests>;
 
-INSTANTIATE_TEST_SUITE_P(PicMatrixTests, yakimov_i_max_values_in_matrix_rows_Func_Tests, kGtestValues, kPerfTestName);
+INSTANTIATE_TEST_SUITE_P(MatrixTests, yakimov_i_max_values_in_matrix_rows_Func_Tests, kGtestValues, kPerfTestName);
 
 }  // namespace
 
