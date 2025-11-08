@@ -1,10 +1,5 @@
 #include <gtest/gtest.h>
 
-#include <algorithm>
-#include <fstream>
-#include <string>
-#include <vector>
-
 #include "util/include/perf_test_util.hpp"
 #include "yakimov_i_max_values_in_matrix_rows/common/include/common.hpp"
 #include "yakimov_i_max_values_in_matrix_rows/mpi/include/ops_mpi.hpp"
@@ -14,20 +9,15 @@ namespace yakimov_i_max_values_in_matrix_rows {
 
 class yakimov_i_max_values_in_matrix_rows_Perf_Tests : public ppc::util::BaseRunPerfTests<InType, OutType> {
 protected:
-  void SetUp() override {
-    input_data_ = 25;
-  }
 
   bool CheckTestOutputData(OutType &output_data) final {
     return output_data != 0;
   }
 
   InType GetTestInputData() final {
-    return input_data_;
+    return 25;
   }
 
-private:
-  InType input_data_ = 0;
 };
 
 TEST_P(yakimov_i_max_values_in_matrix_rows_Perf_Tests, RunPerfModes) {

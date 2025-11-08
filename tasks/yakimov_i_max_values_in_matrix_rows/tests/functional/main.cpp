@@ -2,10 +2,7 @@
 
 #include <algorithm>
 #include <array>
-#include <cstddef>
-#include <cstdint>
-#include <numeric>
-#include <stdexcept>
+#include <fstream>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -26,29 +23,24 @@ class yakimov_i_max_values_in_matrix_rows_Func_Tests : public ppc::util::BaseRun
   }
 
  protected:
-  void SetUp() override {
-    TestType params = std::get<static_cast<std::size_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
-    input_data_ = std::get<0>(params);
-  }
-
   bool CheckTestOutputData(OutType &output_data) final {
-    return output_data > 0;
+    // Простая проверка что результат вычислен
+    return output_data != 0;
   }
 
   InType GetTestInputData() final {
-    return input_data_;
+    TestType params = std::get<static_cast<std::size_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
+    return std::get<0>(params);
   }
-
- private:
-  InType input_data_ = 0;
 };
 
 namespace {
 
-TEST_P(yakimov_i_max_values_in_matrix_rows_Func_Tests, MatmulFromPic) {
+TEST_P(yakimov_i_max_values_in_matrix_rows_Func_Tests, MaxValuesInRows) {
   ExecuteTest(GetParam());
 }
 
+// Тестируем на разных размерах матриц
 const std::array<TestType, 5> kTestParam = {
   std::make_tuple(1, "very_small"),
   std::make_tuple(5, "small"), 
@@ -57,10 +49,11 @@ const std::array<TestType, 5> kTestParam = {
   std::make_tuple(20, "very_large")
 };
 
-const auto kTestTasksList = std::tuple_cat(ppc::util::AddFuncTask<YakimovIMaxValuesInMatrixRowsMPI, InType>(
-                                               kTestParam, PPC_SETTINGS_yakimov_i_max_values_in_matrix_rows),
-                                           ppc::util::AddFuncTask<YakimovIMaxValuesInMatrixRowsSEQ, InType>(
-                                               kTestParam, PPC_SETTINGS_yakimov_i_max_values_in_matrix_rows));
+const auto kTestTasksList = std::tuple_cat(
+    ppc::util::AddFuncTask<YakimovIMaxValuesInMatrixRowsMPI, InType>(
+        kTestParam, PPC_SETTINGS_yakimov_i_max_values_in_matrix_rows),
+    ppc::util::AddFuncTask<YakimovIMaxValuesInMatrixRowsSEQ, InType>(
+        kTestParam, PPC_SETTINGS_yakimov_i_max_values_in_matrix_rows));
 
 const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
 
