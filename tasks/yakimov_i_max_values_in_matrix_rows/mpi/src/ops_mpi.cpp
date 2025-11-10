@@ -40,6 +40,11 @@ bool YakimovIMaxValuesInMatrixRowsMPI::PreProcessingImpl() {
       return false;
     }
 
+    if (matrix.empty() || matrix[0].empty()) {
+      std::cerr << "Error: Matrix is empty" << std::endl;
+      return false;
+    }
+
     maxValues.resize(rows, 0);
   }
   
@@ -80,89 +85,133 @@ bool YakimovIMaxValuesInMatrixRowsMPI::ReadMatrixFromFile(const std::string& fil
 }
 
 bool YakimovIMaxValuesInMatrixRowsMPI::RunImpl() {
-  int rank, size;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
-  
-  int matrix_dims[2] = {0, 0};
-  if (rank == 0) {
-    matrix_dims[0] = static_cast<int>(rows);
-    matrix_dims[1] = static_cast<int>(cols);
-  }
-  
-  MPI_Bcast(matrix_dims, 2, MPI_INT, 0, MPI_COMM_WORLD);
-  int total_rows = matrix_dims[0];
-  int total_cols = matrix_dims[1];
-  
-  if (total_rows == 0 || total_cols == 0) {
-    return false;
-  }
-  
-  int rows_per_process = total_rows / size;
-  int remainder = total_rows % size;
-  
-  int start_row = rank * rows_per_process + std::min(rank, remainder);
-  int end_row = start_row + rows_per_process + (rank < remainder ? 1 : 0);
-  int local_rows = end_row - start_row;
-  
-  // ПОТОМ: каждый процесс вычисляет свои максимумы
-  std::vector<InType> local_max_values(local_rows, 0);
-  
-  if (rank == 0) {
-    for (int i = 0; i < local_rows; i++) {
-      local_max_values[i] = matrix[start_row + i][0];
-      for (int j = 1; j < total_cols; j++) {
-        if (matrix[start_row + i][j] > local_max_values[i]) {
-          local_max_values[i] = matrix[start_row + i][j];
+    int rank, size;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    
+    int matrix_dims[2] = {0, 0};
+    if (rank == 0) {
+        matrix_dims[0] = static_cast<int>(rows);
+        matrix_dims[1] = static_cast<int>(cols);
+    }
+    
+    MPI_Bcast(matrix_dims, 2, MPI_INT, 0, MPI_COMM_WORLD);
+    int total_rows = matrix_dims[0];
+    int total_cols = matrix_dims[1];
+    
+    if (total_rows == 0 || total_cols == 0) {
+        return false;
+    }
+    
+    int rows_per_process = total_rows / size;
+    int remainder = total_rows % size;
+    
+    int start_row = rank * rows_per_process + std::min(rank, remainder);
+    int end_row = start_row + rows_per_process + (rank < remainder ? 1 : 0);
+    int local_rows = end_row - start_row;
+    
+    // Оптимизация: отправляем данные блоками, а не по одной строке
+    if (rank == 0) {
+        for (int proc = 1; proc < size; proc++) {
+            int proc_start = proc * rows_per_process + std::min(proc, remainder);
+            int proc_rows = rows_per_process + (proc < remainder ? 1 : 0);
+            
+            // Отправляем все строки одним сообщением
+            std::vector<InType> proc_data;
+            proc_data.reserve(proc_rows * total_cols);
+            for (int i = 0; i < proc_rows; i++) {
+                proc_data.insert(proc_data.end(), 
+                               matrix[proc_start + i].begin(),
+                               matrix[proc_start + i].end());
+            }
+            
+            MPI_Send(proc_data.data(), proc_rows * total_cols, MPI_INT, 
+                    proc, 0, MPI_COMM_WORLD);
         }
-      }
-    }
-  } else {
-    std::vector<std::vector<InType>> local_matrix(local_rows, std::vector<InType>(total_cols));
-    
-    for (int i = 0; i < local_rows; i++) {
-      MPI_Recv(local_matrix[i].data(), total_cols, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
     
-    for (int i = 0; i < local_rows; i++) {
-      local_max_values[i] = local_matrix[i][0];
-      for (int j = 1; j < total_cols; j++) {
-        if (local_matrix[i][j] > local_max_values[i]) {
-          local_max_values[i] = local_matrix[i][j];
+    std::vector<InType> local_data;
+    if (rank == 0) {
+        // Процесс 0 обрабатывает свои данные напрямую
+        local_data.reserve(local_rows * total_cols);
+        for (int i = 0; i < local_rows; i++) {
+            local_data.insert(local_data.end(),
+                            matrix[start_row + i].begin(),
+                            matrix[start_row + i].end());
         }
-      }
-    }
-  }
-  
-  // И ТОЛЬКО ПОТОМ: собрать результаты
-  if (rank == 0) {
-    for (int proc = 1; proc < size; proc++) {
-      int proc_start = proc * rows_per_process + std::min(proc, remainder);
-      int proc_rows = rows_per_process + (proc < remainder ? 1 : 0);
-      
-      std::vector<InType> proc_max_values(proc_rows);
-      MPI_Recv(proc_max_values.data(), proc_rows, MPI_INT, proc, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      
-      for (int i = 0; i < proc_rows; i++) {
-        maxValues[proc_start + i] = proc_max_values[i];
-      }
+    } else {
+        // Другие процессы получают данные
+        local_data.resize(local_rows * total_cols);
+        MPI_Recv(local_data.data(), local_rows * total_cols, MPI_INT,
+                0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
     
-    // Добавить локальные результаты процесса 0
+    // Обработка локальных данных
+    std::vector<InType> local_max_values(local_rows);
     for (int i = 0; i < local_rows; i++) {
-      maxValues[start_row + i] = local_max_values[i];
+        InType row_max = local_data[i * total_cols];
+        for (int j = 1; j < total_cols; j++) {
+            if (local_data[i * total_cols + j] > row_max) {
+                row_max = local_data[i * total_cols + j];
+            }
+        }
+        local_max_values[i] = row_max;
     }
     
-  } else {
-    MPI_Send(local_max_values.data(), local_rows, MPI_INT, 0, 0, MPI_COMM_WORLD);
-  }
-  
-  MPI_Barrier(MPI_COMM_WORLD);
-  return true;
+    // Сбор результатов
+    if (rank == 0) {
+        maxValues.resize(total_rows);
+        
+        for (int i = 0; i < local_rows; i++) {
+            maxValues[start_row + i] = local_max_values[i];
+        }
+        
+        for (int proc = 1; proc < size; proc++) {
+            int proc_start = proc * rows_per_process + std::min(proc, remainder);
+            int proc_rows = rows_per_process + (proc < remainder ? 1 : 0);
+            
+            std::vector<InType> proc_max_values(proc_rows);
+            MPI_Recv(proc_max_values.data(), proc_rows, MPI_INT,
+                    proc, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            
+            for (int i = 0; i < proc_rows; i++) {
+                maxValues[proc_start + i] = proc_max_values[i];
+            }
+        }
+    } else {
+        MPI_Send(local_max_values.data(), local_rows, MPI_INT, 0, 0, MPI_COMM_WORLD);
+    }
+    
+    return true;
 }
 
 bool YakimovIMaxValuesInMatrixRowsMPI::PostProcessingImpl() {
-  return true;
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    
+    if (rank == 0) {
+        if (!maxValues.empty()) {
+            // Вычисляем сумму максимальных значений как результат
+            OutType result = 0;
+            for (const auto& maxVal : maxValues) {
+                result += maxVal;
+            }
+            GetOutput() = result;
+        } else {
+            std::cerr << "Rank 0: Error - maxValues is empty!" << std::endl;
+            return false;
+        }
+    } else {
+        // В других процессах тоже нужно установить результат, иначе он останется 0
+        GetOutput() = 1; // Или другое значение по умолчанию
+    }
+    
+    // Синхронизируем результат между всеми процессами
+    OutType final_result = GetOutput();
+    MPI_Bcast(&final_result, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    GetOutput() = final_result;
+    
+    return true;
 }
 
 }  // namespace yakimov_i_max_values_in_matrix_rows

@@ -92,7 +92,18 @@ namespace yakimov_i_max_values_in_matrix_rows {
   }
 
   bool YakimovIMaxValuesInMatrixRowsSEQ::PostProcessingImpl() {
-    return true;
-  }
+    if (!maxValues.empty()) {
+        // Вычисляем сумму максимальных значений как результат
+        OutType result = 0;
+        for (const auto& maxVal : maxValues) {
+            result += maxVal;
+        }
+        GetOutput() = result;
+        return true;
+    } else {
+        std::cerr << "SEQ: Error - maxValues is empty!" << std::endl;
+        return false;
+    }
+}
 
 }  // namespace yakimov_i_max_values_in_matrix_rows

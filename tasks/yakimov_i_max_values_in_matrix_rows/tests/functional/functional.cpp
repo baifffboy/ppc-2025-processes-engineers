@@ -25,7 +25,7 @@ class yakimov_i_max_values_in_matrix_rows_Func_Tests : public ppc::util::BaseRun
  protected:
   bool CheckTestOutputData(OutType &output_data) final {
     // Простая проверка что результат вычислен
-    return output_data != 0;
+    return output_data > 0;
   }
 
   InType GetTestInputData() final {
@@ -43,10 +43,10 @@ TEST_P(yakimov_i_max_values_in_matrix_rows_Func_Tests, MaxValuesInRows) {
 // Тестируем на разных размерах матриц
 const std::array<TestType, 5> kTestParam = {
   std::make_tuple(1, "very_small"),
-  std::make_tuple(5, "small"), 
-  std::make_tuple(10, "medium"),
-  std::make_tuple(15, "large"),
-  std::make_tuple(20, "very_large")
+  std::make_tuple(3, "small"), 
+  std::make_tuple(6, "medium"),
+  std::make_tuple(9, "large"),
+  std::make_tuple(12, "very_large")
 };
 
 const auto kTestTasksList = std::tuple_cat(

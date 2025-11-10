@@ -11,7 +11,7 @@ class yakimov_i_max_values_in_matrix_rows_Perf_Tests : public ppc::util::BaseRun
 protected:
 
   bool CheckTestOutputData(OutType &output_data) final {
-    return output_data != 0;
+    return output_data > 0;
   }
 
   InType GetTestInputData() final {
