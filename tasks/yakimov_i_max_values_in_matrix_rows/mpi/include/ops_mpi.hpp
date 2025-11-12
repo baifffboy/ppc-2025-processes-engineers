@@ -1,9 +1,10 @@
 #pragma once
 
+#include <string>
+#include <vector>
+
 #include "task/include/task.hpp"
 #include "yakimov_i_max_values_in_matrix_rows/common/include/common.hpp"
-#include <vector>
-#include <string>
 
 namespace yakimov_i_max_values_in_matrix_rows {
 
@@ -19,7 +20,7 @@ class YakimovIMaxValuesInMatrixRowsMPI : public BaseTask {
   bool PreProcessingImpl() override;
   bool RunImpl() override;
   bool PostProcessingImpl() override;
-  bool ReadMatrixFromFile(const std::string& filename);
+  bool ReadMatrixFromFile(const std::string &filename);
 
   std::vector<std::vector<InType>> matrix;
   std::vector<InType> maxValues;

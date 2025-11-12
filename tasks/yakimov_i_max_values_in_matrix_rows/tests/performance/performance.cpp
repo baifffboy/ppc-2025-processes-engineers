@@ -8,8 +8,7 @@
 namespace yakimov_i_max_values_in_matrix_rows {
 
 class yakimov_i_max_values_in_matrix_rows_Perf_Tests : public ppc::util::BaseRunPerfTests<InType, OutType> {
-protected:
-
+ protected:
   bool CheckTestOutputData(OutType &output_data) final {
     return output_data > 0;
   }
@@ -17,7 +16,6 @@ protected:
   InType GetTestInputData() final {
     return 30;
   }
-
 };
 
 TEST_P(yakimov_i_max_values_in_matrix_rows_Perf_Tests, RunPerfModes) {
