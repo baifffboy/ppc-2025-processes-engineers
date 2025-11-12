@@ -7,6 +7,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <filesystem>
 
 #include "util/include/util.hpp"
 #include "yakimov_i_max_values_in_matrix_rows/common/include/common.hpp"
@@ -17,8 +18,8 @@ YakimovIMaxValuesInMatrixRowsMPI::YakimovIMaxValuesInMatrixRowsMPI(const InType 
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
   GetOutput() = 0;  
-
-  matrixFilename = "/mnt/c/Users/ilya_/OneDrive/Рабочий стол/parallel_programming/ppc-2025-processes-engineers/tasks/yakimov_i_max_values_in_matrix_rows/data/" + std::to_string(GetInput()) + ".txt";
+  std::filesystem::path exe_path = std::filesystem::read_symlink("/proc/self/exe");
+  matrixFilename = exe_path.parent_path().string() + "/../../tasks/yakimov_i_max_values_in_matrix_rows/data/" + std::to_string(GetInput()) + ".txt";
 }
 
 bool YakimovIMaxValuesInMatrixRowsMPI::ValidationImpl() {
@@ -36,7 +37,6 @@ bool YakimovIMaxValuesInMatrixRowsMPI::PreProcessingImpl() {
   
   if (rank == 0) {
     if (!ReadMatrixFromFile(matrixFilename)) {
-      std::cerr << "Error: Cannot read matrix from file " << matrixFilename << std::endl;
       return false;
     }
 
@@ -110,13 +110,11 @@ bool YakimovIMaxValuesInMatrixRowsMPI::RunImpl() {
     int end_row = start_row + rows_per_process + (rank < remainder ? 1 : 0);
     int local_rows = end_row - start_row;
     
-    // Оптимизация: отправляем данные блоками, а не по одной строке
     if (rank == 0) {
         for (int proc = 1; proc < size; proc++) {
             int proc_start = proc * rows_per_process + std::min(proc, remainder);
             int proc_rows = rows_per_process + (proc < remainder ? 1 : 0);
             
-            // Отправляем все строки одним сообщением
             std::vector<InType> proc_data;
             proc_data.reserve(proc_rows * total_cols);
             for (int i = 0; i < proc_rows; i++) {
@@ -132,7 +130,6 @@ bool YakimovIMaxValuesInMatrixRowsMPI::RunImpl() {
     
     std::vector<InType> local_data;
     if (rank == 0) {
-        // Процесс 0 обрабатывает свои данные напрямую
         local_data.reserve(local_rows * total_cols);
         for (int i = 0; i < local_rows; i++) {
             local_data.insert(local_data.end(),
@@ -140,13 +137,11 @@ bool YakimovIMaxValuesInMatrixRowsMPI::RunImpl() {
                             matrix[start_row + i].end());
         }
     } else {
-        // Другие процессы получают данные
         local_data.resize(local_rows * total_cols);
         MPI_Recv(local_data.data(), local_rows * total_cols, MPI_INT,
                 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
     
-    // Обработка локальных данных
     std::vector<InType> local_max_values(local_rows);
     for (int i = 0; i < local_rows; i++) {
         InType row_max = local_data[i * total_cols];
@@ -158,7 +153,6 @@ bool YakimovIMaxValuesInMatrixRowsMPI::RunImpl() {
         local_max_values[i] = row_max;
     }
     
-    // Сбор результатов
     if (rank == 0) {
         maxValues.resize(total_rows);
         
@@ -191,22 +185,18 @@ bool YakimovIMaxValuesInMatrixRowsMPI::PostProcessingImpl() {
     
     if (rank == 0) {
         if (!maxValues.empty()) {
-            // Вычисляем сумму максимальных значений как результат
             OutType result = 0;
             for (const auto& maxVal : maxValues) {
                 result += maxVal;
             }
             GetOutput() = result;
         } else {
-            std::cerr << "Rank 0: Error - maxValues is empty!" << std::endl;
             return false;
         }
     } else {
-        // В других процессах тоже нужно установить результат, иначе он останется 0
-        GetOutput() = 1; // Или другое значение по умолчанию
+        GetOutput() = 1;
     }
     
-    // Синхронизируем результат между всеми процессами
     OutType final_result = GetOutput();
     MPI_Bcast(&final_result, 1, MPI_INT, 0, MPI_COMM_WORLD);
     GetOutput() = final_result;

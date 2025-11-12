@@ -24,7 +24,6 @@ class yakimov_i_max_values_in_matrix_rows_Func_Tests : public ppc::util::BaseRun
 
  protected:
   bool CheckTestOutputData(OutType &output_data) final {
-    // Простая проверка что результат вычислен
     return output_data > 0;
   }
 
@@ -40,13 +39,37 @@ TEST_P(yakimov_i_max_values_in_matrix_rows_Func_Tests, MaxValuesInRows) {
   ExecuteTest(GetParam());
 }
 
-// Тестируем на разных размерах матриц
-const std::array<TestType, 5> kTestParam = {
-  std::make_tuple(1, "very_small"),
-  std::make_tuple(3, "small"), 
+const std::array<TestType, 15> kTestParam = {
+  std::make_tuple(1, "tiny"),
+  std::make_tuple(2, "very_small"),
+  std::make_tuple(3, "small"),
+  std::make_tuple(4, "compact"),
+  std::make_tuple(5, "modest"),
   std::make_tuple(6, "medium"),
+  std::make_tuple(7, "moderate"),
+  std::make_tuple(8, "standard"),
   std::make_tuple(9, "large"),
-  std::make_tuple(12, "very_large")
+  std::make_tuple(10, "generous"),
+  std::make_tuple(11, "spacious"),
+  std::make_tuple(12, "very_large"),
+  std::make_tuple(13, "extended"),
+  std::make_tuple(14, "expanded"),
+  std::make_tuple(15, "substantial")
+  /*std::make_tuple(16, "considerable"),
+  std::make_tuple(17, "ample"),
+  std::make_tuple(18, "copious"),
+  std::make_tuple(19, "abundant"),
+  std::make_tuple(20, "plentiful"),
+  std::make_tuple(21, "extensive"),
+  std::make_tuple(22, "capacious"),
+  std::make_tuple(23, "voluminous"),
+  std::make_tuple(24, "commodious"),
+  std::make_tuple(25, "expansive"),
+  std::make_tuple(26, "roomy"),
+  std::make_tuple(27, "sizable"),
+  std::make_tuple(28, "massive"),
+  std::make_tuple(29, "gigantic"),
+  std::make_tuple(30, "colossal")*/
 };
 
 const auto kTestTasksList = std::tuple_cat(

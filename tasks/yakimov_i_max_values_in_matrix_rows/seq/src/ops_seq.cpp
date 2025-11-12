@@ -7,6 +7,7 @@
 #include <vector>
 #include <algorithm>
 #include <fstream>
+#include <filesystem>
 
 #include "util/include/util.hpp"
 #include "yakimov_i_max_values_in_matrix_rows/common/include/common.hpp"
@@ -17,8 +18,8 @@ namespace yakimov_i_max_values_in_matrix_rows {
     SetTypeOfTask(GetStaticTypeOfTask());
     GetInput() = in;
     GetOutput() = 0;
-
-    matrixFilename = "/mnt/c/Users/ilya_/OneDrive/Рабочий стол/parallel_programming/ppc-2025-processes-engineers/tasks/yakimov_i_max_values_in_matrix_rows/data/" + std::to_string(GetInput()) + ".txt";
+    std::filesystem::path exe_path = std::filesystem::read_symlink("/proc/self/exe");
+    matrixFilename = exe_path.parent_path().string() + "/../../tasks/yakimov_i_max_values_in_matrix_rows/data/" + std::to_string(GetInput()) + ".txt";
   }
 
   bool YakimovIMaxValuesInMatrixRowsSEQ::ValidationImpl() {
@@ -93,7 +94,6 @@ namespace yakimov_i_max_values_in_matrix_rows {
 
   bool YakimovIMaxValuesInMatrixRowsSEQ::PostProcessingImpl() {
     if (!maxValues.empty()) {
-        // Вычисляем сумму максимальных значений как результат
         OutType result = 0;
         for (const auto& maxVal : maxValues) {
             result += maxVal;
@@ -101,7 +101,6 @@ namespace yakimov_i_max_values_in_matrix_rows {
         GetOutput() = result;
         return true;
     } else {
-        std::cerr << "SEQ: Error - maxValues is empty!" << std::endl;
         return false;
     }
 }

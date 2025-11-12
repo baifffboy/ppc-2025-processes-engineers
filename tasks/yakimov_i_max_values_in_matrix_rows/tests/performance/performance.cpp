@@ -15,7 +15,7 @@ protected:
   }
 
   InType GetTestInputData() final {
-    return 25;
+    return 30;
   }
 
 };
