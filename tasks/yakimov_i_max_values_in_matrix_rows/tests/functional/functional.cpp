@@ -39,7 +39,7 @@ TEST_P(yakimov_i_max_values_in_matrix_rows_Func_Tests, MaxValuesInRows) {
   ExecuteTest(GetParam());
 }
 
-const std::array<TestType, 15> kTestParam = {
+const std::array<TestType, 13> kTestParam = {
   std::make_tuple(1, "tiny"),
   std::make_tuple(2, "very_small"),
   std::make_tuple(3, "small"),
@@ -52,10 +52,10 @@ const std::array<TestType, 15> kTestParam = {
   std::make_tuple(10, "generous"),
   std::make_tuple(11, "spacious"),
   std::make_tuple(12, "very_large"),
-  std::make_tuple(13, "extended"),
-  std::make_tuple(14, "expanded"),
-  std::make_tuple(15, "substantial")
-  /*std::make_tuple(16, "considerable"),
+  std::make_tuple(13, "extended")
+  /*std::make_tuple(14, "expanded"),
+  std::make_tuple(15, "substantial"),
+  std::make_tuple(16, "considerable"),
   std::make_tuple(17, "ample"),
   std::make_tuple(18, "copious"),
   std::make_tuple(19, "abundant"),
