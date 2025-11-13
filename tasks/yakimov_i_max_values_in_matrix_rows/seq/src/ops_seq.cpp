@@ -1,14 +1,13 @@
 #include "yakimov_i_max_values_in_matrix_rows/seq/include/ops_seq.hpp"
 
-#include <algorithm>
+#include <cstddef>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <numeric>
 #include <string>
 #include <vector>
 
-#include "util/include/util.hpp"
+// #include "util/include/util.hpp"
 #include "yakimov_i_max_values_in_matrix_rows/common/include/common.hpp"
 
 namespace yakimov_i_max_values_in_matrix_rows {
@@ -18,8 +17,8 @@ YakimovIMaxValuesInMatrixRowsSEQ::YakimovIMaxValuesInMatrixRowsSEQ(const InType&
   GetInput() = in;
   GetOutput() = 0;
   std::filesystem::path exe_path = std::filesystem::read_symlink("/proc/self/exe");
-  matrixFilename = exe_path.parent_path().string() + "/../../tasks/yakimov_i_max_values_in_matrix_rows/data/" +
-                   std::to_string(GetInput()) + ".txt";
+  matrix_Filename_ = exe_path.parent_path().string() + "/../../tasks/yakimov_i_max_values_in_matrix_rows/data/" +
+                     std::to_string(GetInput()) + ".txt";
 }
 
 bool YakimovIMaxValuesInMatrixRowsSEQ::ValidationImpl() {
@@ -27,39 +26,39 @@ bool YakimovIMaxValuesInMatrixRowsSEQ::ValidationImpl() {
 }
 
 bool YakimovIMaxValuesInMatrixRowsSEQ::PreProcessingImpl() {
-  if (!ReadMatrixFromFile(matrixFilename)) {
-    std::cerr << "Error: Cannot read matrix from file " << matrixFilename << std::endl;
+  if (!ReadMatrixFromFile(matrix_Filename_)) {
+    std::cerr << "Error: Cannot read matrix from file " << matrix_Filename_ << '\n';
     return false;
   }
 
-  matrix.resize(rows);
-  maxValues.resize(rows);
+  matrix_.resize(rows_);
+  max_Values_.resize(rows_);
   return true;
 }
 
 bool YakimovIMaxValuesInMatrixRowsSEQ::ReadMatrixFromFile(const std::string& filename) {
   std::ifstream file(filename);
   if (!file.is_open()) {
-    std::cerr << "Error: Cannot open file " << filename << std::endl;
+    std::cerr << "Error: Cannot open file " << filename << '\n';
     return false;
   }
 
-  file >> rows >> cols;
+  file >> rows_ >> cols_;
 
-  if (rows == 0 || cols == 0) {
-    std::cerr << "Error: Invalid matrix rows or columns in file " << filename << std::endl;
+  if (rows_ == 0 || cols_ == 0) {
+    std::cerr << "Error: Invalid matrix rows or columns in file " << filename << '\n';
     return false;
   }
 
-  matrix.resize(rows);
-  for (size_t i = 0; i < rows; i++) {
-    matrix[i].resize(cols);
+  matrix_.resize(rows_);
+  for (size_t i = 0; i < rows_; i++) {
+    matrix_[i].resize(cols_);
   }
 
-  for (size_t i = 0; i < rows; i++) {
-    for (size_t j = 0; j < cols; j++) {
-      if (!(file >> matrix[i][j])) {
-        std::cerr << "Error: Cannot read matrix element on position " << i << ", " << j << std::endl;
+  for (size_t i = 0; i < rows_; i++) {
+    for (size_t j = 0; j < cols_; j++) {
+      if (!(file >> matrix_[i][j])) {
+        std::cerr << "Error: Cannot read matrix element on position " << i << ", " << j << '\n';
         return false;
       }
     }
@@ -70,20 +69,20 @@ bool YakimovIMaxValuesInMatrixRowsSEQ::ReadMatrixFromFile(const std::string& fil
 }
 
 bool YakimovIMaxValuesInMatrixRowsSEQ::RunImpl() {
-  if (matrix.empty()) {
+  if (matrix_.empty()) {
     return false;
   }
 
-  for (size_t i = 0; i < rows; i++) {
-    if (matrix[i].empty()) {
+  for (size_t i = 0; i < rows_; i++) {
+    if (matrix_[i].empty()) {
       return false;
     }
 
-    maxValues[i] = matrix[i][0];
+    max_Values_[i] = matrix_[i][0];
 
-    for (size_t j = 1; j < cols; j++) {
-      if (matrix[i][j] > maxValues[i]) {
-        maxValues[i] = matrix[i][j];
+    for (size_t j = 1; j < cols_; j++) {
+      if (matrix_[i][j] > max_Values_[i]) {
+        max_Values_[i] = matrix_[i][j];
       }
     }
   }
@@ -92,16 +91,15 @@ bool YakimovIMaxValuesInMatrixRowsSEQ::RunImpl() {
 }
 
 bool YakimovIMaxValuesInMatrixRowsSEQ::PostProcessingImpl() {
-  if (!maxValues.empty()) {
+  if (!max_Values_.empty()) {
     OutType result = 0;
-    for (const auto& maxVal : maxValues) {
-      result += maxVal;
+    for (const auto& max_val : max_Values_) {
+      result += max_val;
     }
     GetOutput() = result;
     return true;
-  } else {
-    return false;
   }
+  return false;
 }
 
 }  // namespace yakimov_i_max_values_in_matrix_rows

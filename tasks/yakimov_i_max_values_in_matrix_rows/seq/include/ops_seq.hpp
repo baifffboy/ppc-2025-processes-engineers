@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <string>
 #include <vector>
 
@@ -22,11 +23,11 @@ class YakimovIMaxValuesInMatrixRowsSEQ : public BaseTask {
   bool PostProcessingImpl() override;
   bool ReadMatrixFromFile(const std::string &filename);
 
-  std::vector<std::vector<InType>> matrix;
-  std::vector<InType> maxValues;
-  size_t rows;
-  size_t cols;
-  std::string matrixFilename;
+  std::vector<std::vector<InType>> matrix_;
+  std::vector<InType> max_Values_;
+  size_t rows_{0};
+  size_t cols_{0};
+  std::string matrix_Filename_;
 };
 
 }  // namespace yakimov_i_max_values_in_matrix_rows

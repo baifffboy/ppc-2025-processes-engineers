@@ -1,12 +1,9 @@
 #include <gtest/gtest.h>
 
-#include <algorithm>
 #include <array>
-#include <fstream>
+#include <cstddef>
 #include <string>
 #include <tuple>
-#include <utility>
-#include <vector>
 
 #include "util/include/func_test_util.hpp"
 #include "util/include/util.hpp"
@@ -16,7 +13,7 @@
 
 namespace yakimov_i_max_values_in_matrix_rows {
 
-class yakimov_i_max_values_in_matrix_rows_Func_Tests : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
+class YakimovIMaxValuesInMatrixRowsFuncTests : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
  public:
   static std::string PrintTestParam(const TestType &test_param) {
     return std::to_string(std::get<0>(test_param)) + "_" + std::get<1>(test_param);
@@ -35,7 +32,7 @@ class yakimov_i_max_values_in_matrix_rows_Func_Tests : public ppc::util::BaseRun
 
 namespace {
 
-TEST_P(yakimov_i_max_values_in_matrix_rows_Func_Tests, MaxValuesInRows) {
+TEST_P(YakimovIMaxValuesInMatrixRowsFuncTests, MaxValuesInRows) {
   ExecuteTest(GetParam());
 }
 
@@ -72,9 +69,9 @@ const auto kTestTasksList = std::tuple_cat(ppc::util::AddFuncTask<YakimovIMaxVal
 const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
 
 const auto kPerfTestName =
-    yakimov_i_max_values_in_matrix_rows_Func_Tests::PrintFuncTestName<yakimov_i_max_values_in_matrix_rows_Func_Tests>;
+    YakimovIMaxValuesInMatrixRowsFuncTests::PrintFuncTestName<YakimovIMaxValuesInMatrixRowsFuncTests>;
 
-INSTANTIATE_TEST_SUITE_P(MatrixTests, yakimov_i_max_values_in_matrix_rows_Func_Tests, kGtestValues, kPerfTestName);
+INSTANTIATE_TEST_SUITE_P(MatrixTests, YakimovIMaxValuesInMatrixRowsFuncTests, kGtestValues, kPerfTestName);
 
 }  // namespace
 

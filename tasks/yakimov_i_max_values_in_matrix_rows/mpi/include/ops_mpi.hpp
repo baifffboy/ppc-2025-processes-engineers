@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <string>
 #include <vector>
 
@@ -21,12 +22,18 @@ class YakimovIMaxValuesInMatrixRowsMPI : public BaseTask {
   bool RunImpl() override;
   bool PostProcessingImpl() override;
   bool ReadMatrixFromFile(const std::string &filename);
+  // вспомогательные функции к RunImpl
+  void BroadcastMatrixDimensions(int &total_rows, int &total_cols) const;
+  void SendDataToWorkers(int size, int total_rows, int total_cols);
+  void ProcessLocalData(int rank, int local_rows, int total_cols, int start_row, std::vector<InType> &local_data);
+  void GatherResults(int rank, int size, int total_rows, const std::vector<InType> &local_max_values, int start_row,
+                     int local_rows);
 
-  std::vector<std::vector<InType>> matrix;
-  std::vector<InType> maxValues;
-  size_t rows;
-  size_t cols;
-  std::string matrixFilename;
+  std::vector<std::vector<InType>> matrix_;
+  std::vector<InType> max_Values_;
+  size_t rows_{0};
+  size_t cols_{0};
+  std::string matrix_Filename_;
 };
 
 }  // namespace yakimov_i_max_values_in_matrix_rows
