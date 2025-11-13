@@ -17,7 +17,7 @@
 namespace yakimov_i_max_values_in_matrix_rows {
 
 namespace {
-void CalculateLocalRows(int rank, int size, int total_rows, int& local_rows, int& start_row, int& end_row) {
+void CalculateLocalRows(int rank, int size, int total_rows, int &local_rows, int &start_row, int &end_row) {
   int rows_per_process = total_rows / size;
   int remainder = total_rows % size;
 
@@ -26,8 +26,8 @@ void CalculateLocalRows(int rank, int size, int total_rows, int& local_rows, int
   local_rows = end_row - start_row;
 }
 
-void FindLocalMaxValues(int local_rows, int total_cols, const std::vector<InType>& local_data,
-                        std::vector<InType>& local_max_values) {
+void FindLocalMaxValues(int local_rows, int total_cols, const std::vector<InType> &local_data,
+                        std::vector<InType> &local_max_values) {
   for (int i = 0; i < local_rows; i++) {
     InType row_max = local_data[static_cast<size_t>(i) * static_cast<size_t>(total_cols)];
     for (int j = 1; j < total_cols; j++) {
@@ -40,7 +40,7 @@ void FindLocalMaxValues(int local_rows, int total_cols, const std::vector<InType
 }
 }  // namespace
 
-YakimovIMaxValuesInMatrixRowsMPI::YakimovIMaxValuesInMatrixRowsMPI(const InType& in) {
+YakimovIMaxValuesInMatrixRowsMPI::YakimovIMaxValuesInMatrixRowsMPI(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
   GetOutput() = 0;
@@ -79,7 +79,7 @@ bool YakimovIMaxValuesInMatrixRowsMPI::PreProcessingImpl() {
   return true;
 }
 
-bool YakimovIMaxValuesInMatrixRowsMPI::ReadMatrixFromFile(const std::string& filename) {
+bool YakimovIMaxValuesInMatrixRowsMPI::ReadMatrixFromFile(const std::string &filename) {
   std::ifstream file(filename);
   if (!file.is_open()) {
     std::cerr << "Error: Cannot open file " << filename << '\n';
@@ -111,7 +111,7 @@ bool YakimovIMaxValuesInMatrixRowsMPI::ReadMatrixFromFile(const std::string& fil
   return true;
 }
 
-void YakimovIMaxValuesInMatrixRowsMPI::BroadcastMatrixDimensions(int& total_rows, int& total_cols) const {
+void YakimovIMaxValuesInMatrixRowsMPI::BroadcastMatrixDimensions(int &total_rows, int &total_cols) const {
   std::array<int, 2> matrix_dims = {0, 0};
   int rank = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -145,7 +145,7 @@ void YakimovIMaxValuesInMatrixRowsMPI::SendDataToWorkers(int size, int total_row
 }
 
 void YakimovIMaxValuesInMatrixRowsMPI::ProcessLocalData(int rank, int local_rows, int total_cols, int start_row,
-                                                        std::vector<InType>& local_data) {
+                                                        std::vector<InType> &local_data) {
   if (rank == 0) {
     local_data.reserve(static_cast<size_t>(local_rows) * static_cast<size_t>(total_cols));
     for (int i = 0; i < local_rows; i++) {
@@ -158,7 +158,7 @@ void YakimovIMaxValuesInMatrixRowsMPI::ProcessLocalData(int rank, int local_rows
 }
 
 void YakimovIMaxValuesInMatrixRowsMPI::GatherResults(int rank, int size, int total_rows,
-                                                     const std::vector<InType>& local_max_values, int start_row,
+                                                     const std::vector<InType> &local_max_values, int start_row,
                                                      int local_rows) {
   int rows_per_process = total_rows / size;
   int remainder = total_rows % size;
@@ -227,7 +227,7 @@ bool YakimovIMaxValuesInMatrixRowsMPI::PostProcessingImpl() {
   if (rank == 0) {
     if (!max_Values_.empty()) {
       OutType result = 0;
-      for (const auto& max_val : max_Values_) {
+      for (const auto &max_val : max_Values_) {
         result += max_val;
       }
       GetOutput() = result;

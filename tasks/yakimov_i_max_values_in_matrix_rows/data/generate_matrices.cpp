@@ -15,7 +15,7 @@ class MatrixGenerator {
  public:
   MatrixGenerator() : gen_(rd_()) {}
 
-  void GenerateMatrixFile(const std::string& filename, int min_rows, int max_rows, int min_cols, int max_cols) {
+  void GenerateMatrixFile(const std::string &filename, int min_rows, int max_rows, int min_cols, int max_cols) {
     std::ofstream file(filename);
     if (!file.is_open()) {
       std::cerr << "Error: Cannot open file " << filename << '\n';
@@ -44,7 +44,7 @@ class MatrixGenerator {
     std::cout << "Generated: " << filename << " (" << rows << "x" << cols << ")" << '\n';
   }
 
-  void GenerateAllMatrices(const std::string& output_dir, int count = 30) {
+  void GenerateAllMatrices(const std::string &output_dir, int count = 30) {
     fs::create_directories(output_dir);
 
     const int min_size_small = 100;
@@ -75,7 +75,7 @@ int main() {
   MatrixGenerator generator;
 
   std::string exe_path = fs::current_path().string();
-  const std::string& output_dir = exe_path;
+  const std::string &output_dir = exe_path;
 
   std::cout << "Generating 30 matrix files with random non-square sizes..." << '\n';
   std::cout << "Size range: from ~100x100 to ~5000x5000" << '\n';

@@ -12,7 +12,7 @@
 
 namespace yakimov_i_max_values_in_matrix_rows {
 
-YakimovIMaxValuesInMatrixRowsSEQ::YakimovIMaxValuesInMatrixRowsSEQ(const InType& in) {
+YakimovIMaxValuesInMatrixRowsSEQ::YakimovIMaxValuesInMatrixRowsSEQ(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
   GetOutput() = 0;
@@ -36,7 +36,7 @@ bool YakimovIMaxValuesInMatrixRowsSEQ::PreProcessingImpl() {
   return true;
 }
 
-bool YakimovIMaxValuesInMatrixRowsSEQ::ReadMatrixFromFile(const std::string& filename) {
+bool YakimovIMaxValuesInMatrixRowsSEQ::ReadMatrixFromFile(const std::string &filename) {
   std::ifstream file(filename);
   if (!file.is_open()) {
     std::cerr << "Error: Cannot open file " << filename << '\n';
@@ -93,7 +93,7 @@ bool YakimovIMaxValuesInMatrixRowsSEQ::RunImpl() {
 bool YakimovIMaxValuesInMatrixRowsSEQ::PostProcessingImpl() {
   if (!max_Values_.empty()) {
     OutType result = 0;
-    for (const auto& max_val : max_Values_) {
+    for (const auto &max_val : max_Values_) {
       result += max_val;
     }
     GetOutput() = result;
