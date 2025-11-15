@@ -13,7 +13,8 @@
 // #include "util/include/util.hpp"
 #include "yakimov_i_max_values_in_matrix_rows/common/include/common.hpp"
 
-// NOLINTBEGIN(readability-convert-member-functions-to-static)
+// NOLINTBEGIN(cppcoreguidelines-pro-type-member-init,readability-redundant-member-init,
+// readability-convert-member-functions-to-static)
 
 namespace yakimov_i_max_values_in_matrix_rows {
 
@@ -248,6 +249,7 @@ bool YakimovIMaxValuesInMatrixRowsMPI::RunImpl() {
   return true;
 }
 
-// NOLINTEND(readability-convert-member-functions-to-static)
+// NOLINTEND(cppcoreguidelines-pro-type-member-init,readability-redundant-member-init,
+// readability-convert-member-functions-to-static)
 
 }  // namespace yakimov_i_max_values_in_matrix_rows

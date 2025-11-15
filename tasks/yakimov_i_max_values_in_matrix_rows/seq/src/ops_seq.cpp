@@ -9,6 +9,8 @@
 // #include "util/include/util.hpp"
 #include "yakimov_i_max_values_in_matrix_rows/common/include/common.hpp"
 
+// NOLINTBEGIN(cppcoreguidelines-pro-type-member-init,readability-redundant-member-init)
+
 namespace yakimov_i_max_values_in_matrix_rows {
 
 YakimovIMaxValuesInMatrixRowsSEQ::YakimovIMaxValuesInMatrixRowsSEQ(
@@ -102,5 +104,7 @@ bool YakimovIMaxValuesInMatrixRowsSEQ::PostProcessingImpl() {  // NOLINT(readabi
   }
   return false;
 }
+
+// NOLINTEND(cppcoreguidelines-pro-type-member-init,readability-redundant-member-init)
 
 }  // namespace yakimov_i_max_values_in_matrix_rows
