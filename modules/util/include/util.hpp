@@ -106,7 +106,7 @@ namespace test {
 [[nodiscard]] inline std::string SanitizeToken(std::string_view token_sv) {
   std::string token{token_sv};
   auto is_allowed = [](char c) {
-    return std::isalnum(static_cast<unsigned char>(c)) != 0 || c == '_' || c == '-' || c == '.';
+    return std::isalnum(static_cast<unsigned char>(c)) || c == '_' || c == '-' || c == '.';
   };
   std::ranges::replace(token, ' ', '_');
   for (char &ch : token) {

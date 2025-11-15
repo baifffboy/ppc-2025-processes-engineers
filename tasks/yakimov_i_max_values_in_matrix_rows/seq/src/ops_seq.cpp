@@ -5,14 +5,14 @@
 #include <fstream>
 #include <iostream>
 #include <string>
-#include <vector>
 
 // #include "util/include/util.hpp"
 #include "yakimov_i_max_values_in_matrix_rows/common/include/common.hpp"
 
 namespace yakimov_i_max_values_in_matrix_rows {
 
-YakimovIMaxValuesInMatrixRowsSEQ::YakimovIMaxValuesInMatrixRowsSEQ(const InType &in) {
+YakimovIMaxValuesInMatrixRowsSEQ::YakimovIMaxValuesInMatrixRowsSEQ(const InType &in) // NOLINT(cppcoreguidelines-pro-type-member-init)
+    : matrix_(), max_Values_() {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
   GetOutput() = 0;
@@ -21,11 +21,11 @@ YakimovIMaxValuesInMatrixRowsSEQ::YakimovIMaxValuesInMatrixRowsSEQ(const InType 
                      std::to_string(GetInput()) + ".txt";
 }
 
-bool YakimovIMaxValuesInMatrixRowsSEQ::ValidationImpl() {
+bool YakimovIMaxValuesInMatrixRowsSEQ::ValidationImpl() { // NOLINT(readability-convert-member-functions-to-static)
   return (GetInput() > 0) && (GetOutput() == 0);
 }
 
-bool YakimovIMaxValuesInMatrixRowsSEQ::PreProcessingImpl() {
+bool YakimovIMaxValuesInMatrixRowsSEQ::PreProcessingImpl() { // NOLINT(readability-convert-member-functions-to-static)
   if (!ReadMatrixFromFile(matrix_Filename_)) {
     std::cerr << "Error: Cannot read matrix from file " << matrix_Filename_ << '\n';
     return false;
@@ -68,7 +68,7 @@ bool YakimovIMaxValuesInMatrixRowsSEQ::ReadMatrixFromFile(const std::string &fil
   return true;
 }
 
-bool YakimovIMaxValuesInMatrixRowsSEQ::RunImpl() {
+bool YakimovIMaxValuesInMatrixRowsSEQ::RunImpl() { // NOLINT(readability-make-member-function-const)
   if (matrix_.empty()) {
     return false;
   }
@@ -90,7 +90,7 @@ bool YakimovIMaxValuesInMatrixRowsSEQ::RunImpl() {
   return true;
 }
 
-bool YakimovIMaxValuesInMatrixRowsSEQ::PostProcessingImpl() {
+bool YakimovIMaxValuesInMatrixRowsSEQ::PostProcessingImpl() { // NOLINT(readability-convert-member-functions-to-static)
   if (!max_Values_.empty()) {
     OutType result = 0;
     for (const auto &max_val : max_Values_) {
