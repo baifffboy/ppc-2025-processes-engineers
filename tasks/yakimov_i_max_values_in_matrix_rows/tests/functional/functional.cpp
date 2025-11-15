@@ -1,12 +1,12 @@
 #include <gtest/gtest.h>
 
 #include <array>
-#include <cstddef> // NOLINT(misc-include-cleaner)
+#include <cstddef>  // NOLINT(misc-include-cleaner)
 #include <string>
-#include <tuple> 
+#include <tuple>
 
 #include "util/include/func_test_util.hpp"
-#include "util/include/util.hpp" // NOLINT(misc-include-cleaner)
+#include "util/include/util.hpp"  // NOLINT(misc-include-cleaner)
 #include "yakimov_i_max_values_in_matrix_rows/common/include/common.hpp"
 #include "yakimov_i_max_values_in_matrix_rows/mpi/include/ops_mpi.hpp"
 #include "yakimov_i_max_values_in_matrix_rows/seq/include/ops_seq.hpp"
@@ -20,11 +20,11 @@ class YakimovIMaxValuesInMatrixRowsFuncTests : public ppc::util::BaseRunFuncTest
   }
 
  protected:
-  bool CheckTestOutputData(OutType &output_data) final { // NOLINT(readability-convert-member-functions-to-static)
+  bool CheckTestOutputData(OutType &output_data) final {  // NOLINT(readability-convert-member-functions-to-static)
     return output_data > 0;
   }
 
-  InType GetTestInputData() final { // NOLINT(readability-convert-member-functions-to-static)
+  InType GetTestInputData() final {  // NOLINT(readability-convert-member-functions-to-static)
     TestType params = std::get<static_cast<std::size_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
     return std::get<0>(params);
   }
@@ -32,7 +32,7 @@ class YakimovIMaxValuesInMatrixRowsFuncTests : public ppc::util::BaseRunFuncTest
 
 namespace {
 
-TEST_P(YakimovIMaxValuesInMatrixRowsFuncTests, MaxValuesInRows) { // NOLINT(bugprone-throwing-static-initialization)
+TEST_P(YakimovIMaxValuesInMatrixRowsFuncTests, MaxValuesInRows) {  // NOLINT(bugprone-throwing-static-initialization)
   ExecuteTest(GetParam());
 }
 
@@ -71,7 +71,8 @@ const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
 const auto kPerfTestName =
     YakimovIMaxValuesInMatrixRowsFuncTests::PrintFuncTestName<YakimovIMaxValuesInMatrixRowsFuncTests>;
 
-INSTANTIATE_TEST_SUITE_P(MatrixTests, YakimovIMaxValuesInMatrixRowsFuncTests, kGtestValues, kPerfTestName); // NOLINT(bugprone-throwing-static-initialization)
+INSTANTIATE_TEST_SUITE_P(MatrixTests, YakimovIMaxValuesInMatrixRowsFuncTests, kGtestValues,
+                         kPerfTestName);  // NOLINT(bugprone-throwing-static-initialization)
 
 }  // namespace
 

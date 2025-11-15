@@ -50,8 +50,7 @@ bool YakimovIMaxValuesInMatrixRowsMPI::ValidationImpl() {
   return true;
 }
 
-void YakimovIMaxValuesInMatrixRowsMPI::SendDataToWorkers(int size, int total_rows,
-                                                                                              int total_cols) {
+void YakimovIMaxValuesInMatrixRowsMPI::SendDataToWorkers(int size, int total_rows, int total_cols) {
   int rows_per_process = total_rows / size;
   int remainder = total_rows % size;
 
@@ -69,8 +68,8 @@ void YakimovIMaxValuesInMatrixRowsMPI::SendDataToWorkers(int size, int total_row
   }
 }
 
-void YakimovIMaxValuesInMatrixRowsMPI::ProcessLocalData(
-    int rank, int local_rows, int total_cols, int start_row, std::vector<InType> &local_data) {
+void YakimovIMaxValuesInMatrixRowsMPI::ProcessLocalData(int rank, int local_rows, int total_cols, int start_row,
+                                                        std::vector<InType> &local_data) {
   if (rank == 0) {
     local_data.reserve(static_cast<size_t>(local_rows) * static_cast<size_t>(total_cols));
     for (int i = 0; i < local_rows; i++) {
@@ -82,8 +81,9 @@ void YakimovIMaxValuesInMatrixRowsMPI::ProcessLocalData(
   }
 }
 
-void YakimovIMaxValuesInMatrixRowsMPI::GatherResults(
-    int rank, int size, int total_rows, const std::vector<InType> &local_max_values, int start_row, int local_rows) {
+void YakimovIMaxValuesInMatrixRowsMPI::GatherResults(int rank, int size, int total_rows,
+                                                     const std::vector<InType> &local_max_values, int start_row,
+                                                     int local_rows) {
   int rows_per_process = total_rows / size;
   int remainder = total_rows % size;
 
@@ -135,8 +135,9 @@ bool YakimovIMaxValuesInMatrixRowsMPI::PostProcessingImpl() {
   return true;
 }
 
-YakimovIMaxValuesInMatrixRowsMPI::YakimovIMaxValuesInMatrixRowsMPI(const InType &in) // NOLINT(cppcoreguidelines-pro-type-member-init)
-      : matrix_(), max_Values_() {
+YakimovIMaxValuesInMatrixRowsMPI::YakimovIMaxValuesInMatrixRowsMPI(
+    const InType &in)  // NOLINT(cppcoreguidelines-pro-type-member-init)
+    : matrix_(), max_Values_() {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
   GetOutput() = 0;
