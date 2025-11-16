@@ -1,6 +1,7 @@
 #include "yakimov_i_max_values_in_matrix_rows/mpi/include/ops_mpi.hpp"
 
 #include <mpi.h>
+
 #include <algorithm>
 #include <array>
 #include <cstddef>
