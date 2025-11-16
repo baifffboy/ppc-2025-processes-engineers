@@ -45,7 +45,8 @@ repos:
     rev: v0.11.0
     hooks:
       - id: shellcheck
-        files: '\.sh$'
+        files: \.sh$
+        language: system
 
 # Configuration
 default_stages: [pre-commit]
