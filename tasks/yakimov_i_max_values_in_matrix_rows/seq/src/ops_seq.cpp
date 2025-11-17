@@ -19,9 +19,13 @@ YakimovIMaxValuesInMatrixRowsSEQ::YakimovIMaxValuesInMatrixRowsSEQ(
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
   GetOutput() = 0;
-  std::filesystem::path exe_path = std::filesystem::read_symlink("/proc/self/exe");
-  matrix_Filename_ = exe_path.parent_path().string() + "/../../tasks/yakimov_i_max_values_in_matrix_rows/data/" +
-                     std::to_string(GetInput()) + ".txt";
+  // std::filesystem::path exe_path = std::filesystem::read_symlink("/proc/self/exe");
+  std::filesystem::path base_path = std::filesystem::current_path();
+  while (base_path.filename() == "build") {
+    base_path = base_path.parent_path();
+  }
+  matrix_Filename_ =
+      base_path.string() + "/tasks/yakimov_i_max_values_in_matrix_rows/data/" + std::to_string(GetInput()) + ".txt";
 }
 
 bool YakimovIMaxValuesInMatrixRowsSEQ::ValidationImpl() {  // NOLINT(readability-convert-member-functions-to-static)
