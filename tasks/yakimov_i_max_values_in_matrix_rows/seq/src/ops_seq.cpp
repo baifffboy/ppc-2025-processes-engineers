@@ -34,11 +34,6 @@ bool YakimovIMaxValuesInMatrixRowsSEQ::ValidationImpl() {  // NOLINT(readability
 }
 
 bool YakimovIMaxValuesInMatrixRowsSEQ::PreProcessingImpl() {  // NOLINT(readability-convert-member-functions-to-static)
-  if (!ReadMatrixFromFile(matrix_Filename_)) {
-    std::cerr << "Error: Cannot read matrix from file " << matrix_Filename_ << '\n';
-    return false;
-  }
-
   matrix_.resize(rows_);
   max_Values_.resize(rows_);
   return true;
@@ -46,17 +41,8 @@ bool YakimovIMaxValuesInMatrixRowsSEQ::PreProcessingImpl() {  // NOLINT(readabil
 
 bool YakimovIMaxValuesInMatrixRowsSEQ::ReadMatrixFromFile(const std::string &filename) {
   std::ifstream file(filename);
-  if (!file.is_open()) {
-    std::cerr << "Error: Cannot open file " << filename << '\n';
-    return false;
-  }
 
   file >> rows_ >> cols_;
-
-  if (rows_ == 0 || cols_ == 0) {
-    std::cerr << "Error: Invalid matrix rows or columns in file " << filename << '\n';
-    return false;
-  }
 
   matrix_.resize(rows_);
   for (size_t i = 0; i < rows_; i++) {
