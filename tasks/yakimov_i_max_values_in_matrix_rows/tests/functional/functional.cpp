@@ -37,9 +37,9 @@ TEST_P(YakimovIMaxValuesInMatrixRowsFuncTests, MaxValuesInRows) {  // NOLINT(bug
 }
 
 const std::array<TestType, 10> kTestParam = {
-    std::make_tuple(1, "tiny"),      std::make_tuple(2, "very_small"), std::make_tuple(3, "small"),
-    std::make_tuple(4, "compact"),   std::make_tuple(5, "modest"),     std::make_tuple(6, "medium"),
-    std::make_tuple(7, "moderate"),  std::make_tuple(8, "standard"),   std::make_tuple(9, "large"),
+    std::make_tuple(1, "tiny"),     std::make_tuple(2, "very_small"), std::make_tuple(3, "small"),
+    std::make_tuple(4, "compact"),  std::make_tuple(5, "modest"),     std::make_tuple(6, "medium"),
+    std::make_tuple(7, "moderate"), std::make_tuple(8, "standard"),   std::make_tuple(9, "large"),
     std::make_tuple(10, "generous") /*std::make_tuple(11, "spacious"),  std::make_tuple(12, "very_large"),
     std::make_tuple(13, "extended")
     std::make_tuple(14, "expanded"),
