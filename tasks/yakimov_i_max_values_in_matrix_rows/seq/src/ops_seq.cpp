@@ -1,5 +1,6 @@
 #include "yakimov_i_max_values_in_matrix_rows/seq/include/ops_seq.hpp"
 
+#include <algorithm>
 #include <cstddef>
 #include <filesystem>
 #include <fstream>
@@ -88,9 +89,7 @@ bool YakimovIMaxValuesInMatrixRowsSEQ::RunImpl() {  // NOLINT(readability-make-m
     max_Values_[i] = matrix_[i][0];
 
     for (size_t j = 1; j < cols_; j++) {
-      if (matrix_[i][j] > max_Values_[i]) {
-        max_Values_[i] = matrix_[i][j];
-      }
+      max_Values_[i] = std::max(matrix_[i][j], max_Values_[i]);
     }
   }
 

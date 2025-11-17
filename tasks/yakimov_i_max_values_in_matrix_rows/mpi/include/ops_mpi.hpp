@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <string>
+#include <vector>
 
 #include "task/include/task.hpp"
 #include "yakimov_i_max_values_in_matrix_rows/common/include/common.hpp"
