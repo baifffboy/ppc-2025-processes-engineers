@@ -160,11 +160,6 @@ bool YakimovIMaxValuesInMatrixRowsMPI::PreProcessingImpl() {
       return false;
     }
 
-    if (matrix_.empty() || matrix_[0].empty()) {
-      std::cerr << "Error: Matrix is empty" << '\n';
-      return false;
-    }
-
     max_Values_.resize(rows_, 0);
   }
 
@@ -175,14 +170,12 @@ bool YakimovIMaxValuesInMatrixRowsMPI::PreProcessingImpl() {
 bool YakimovIMaxValuesInMatrixRowsMPI::ReadMatrixFromFile(const std::string &filename) {
   std::ifstream file(filename);
   if (!file.is_open()) {
-    std::cerr << "Error: Cannot open file " << filename << '\n';
     return false;
   }
 
   file >> rows_ >> cols_;
 
   if (rows_ == 0 || cols_ == 0) {
-    std::cerr << "Error: Invalid matrix rows or columns in file " << filename << '\n';
     return false;
   }
 
@@ -194,7 +187,6 @@ bool YakimovIMaxValuesInMatrixRowsMPI::ReadMatrixFromFile(const std::string &fil
   for (size_t i = 0; i < rows_; i++) {
     for (size_t j = 0; j < cols_; j++) {
       if (!(file >> matrix_[i][j])) {
-        std::cerr << "Error: Cannot read matrix element on position " << i << ", " << j << '\n';
         return false;
       }
     }
