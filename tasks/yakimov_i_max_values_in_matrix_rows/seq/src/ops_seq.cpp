@@ -79,7 +79,6 @@ bool YakimovIMaxValuesInMatrixRowsSEQ::RunImpl() {  // NOLINT(readability-make-m
       max_Values_[i] = std::max(matrix_[i][j], max_Values_[i]);
     }
   }
-
   return true;
 }
 
