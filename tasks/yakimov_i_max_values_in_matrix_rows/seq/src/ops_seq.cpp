@@ -73,15 +73,7 @@ bool YakimovIMaxValuesInMatrixRowsSEQ::ReadMatrixFromFile(const std::string &fil
 }
 
 bool YakimovIMaxValuesInMatrixRowsSEQ::RunImpl() {  // NOLINT(readability-make-member-function-const)
-  if (matrix_.empty()) {
-    return false;
-  }
-
   for (size_t i = 0; i < rows_; i++) {
-    if (matrix_[i].empty()) {
-      return false;
-    }
-
     max_Values_[i] = matrix_[i][0];
 
     for (size_t j = 1; j < cols_; j++) {
