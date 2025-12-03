@@ -10,17 +10,12 @@
 // #include "util/include/util.hpp"
 #include "yakimov_i_max_values_in_matrix_rows/common/include/common.hpp"
 
-// NOLINTBEGIN(cppcoreguidelines-pro-type-member-init,readability-redundant-member-init)
-
 namespace yakimov_i_max_values_in_matrix_rows {
 
-YakimovIMaxValuesInMatrixRowsSEQ::YakimovIMaxValuesInMatrixRowsSEQ(
-    const InType &in)  // NOLINT(cppcoreguidelines-pro-type-member-init)
-    : matrix_(), max_Values_() {
+YakimovIMaxValuesInMatrixRowsSEQ::YakimovIMaxValuesInMatrixRowsSEQ(const InType &in) : matrix_(), max_Values_() {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
   GetOutput() = 0;
-  // std::filesystem::path exe_path = std::filesystem::read_symlink("/proc/self/exe");
   std::filesystem::path base_path = std::filesystem::current_path();
   while (base_path.filename() == "build") {
     base_path = base_path.parent_path();
@@ -29,11 +24,11 @@ YakimovIMaxValuesInMatrixRowsSEQ::YakimovIMaxValuesInMatrixRowsSEQ(
       base_path.string() + "/tasks/yakimov_i_max_values_in_matrix_rows/data/" + std::to_string(GetInput()) + ".txt";
 }
 
-bool YakimovIMaxValuesInMatrixRowsSEQ::ValidationImpl() {  // NOLINT(readability-convert-member-functions-to-static)
+bool YakimovIMaxValuesInMatrixRowsSEQ::ValidationImpl() {
   return (GetInput() > 0) && (GetOutput() == 0);
 }
 
-bool YakimovIMaxValuesInMatrixRowsSEQ::PreProcessingImpl() {  // NOLINT(readability-convert-member-functions-to-static)
+bool YakimovIMaxValuesInMatrixRowsSEQ::PreProcessingImpl() {
   if (!ReadMatrixFromFile(matrix_Filename_)) {
     return false;
   }
@@ -72,7 +67,7 @@ bool YakimovIMaxValuesInMatrixRowsSEQ::ReadMatrixFromFile(const std::string &fil
   return true;
 }
 
-bool YakimovIMaxValuesInMatrixRowsSEQ::RunImpl() {  // NOLINT(readability-make-member-function-const)
+bool YakimovIMaxValuesInMatrixRowsSEQ::RunImpl() {
   for (size_t i = 0; i < rows_; i++) {
     max_Values_[i] = matrix_[i][0];
     for (size_t j = 1; j < cols_; j++) {
@@ -82,7 +77,7 @@ bool YakimovIMaxValuesInMatrixRowsSEQ::RunImpl() {  // NOLINT(readability-make-m
   return true;
 }
 
-bool YakimovIMaxValuesInMatrixRowsSEQ::PostProcessingImpl() {  // NOLINT(readability-convert-member-functions-to-static)
+bool YakimovIMaxValuesInMatrixRowsSEQ::PostProcessingImpl() {
   if (!max_Values_.empty()) {
     OutType result = 0;
     for (const auto &max_val : max_Values_) {
@@ -93,7 +88,5 @@ bool YakimovIMaxValuesInMatrixRowsSEQ::PostProcessingImpl() {  // NOLINT(readabi
   }
   return false;
 }
-
-// NOLINTEND(cppcoreguidelines-pro-type-member-init,readability-redundant-member-init)
 
 }  // namespace yakimov_i_max_values_in_matrix_rows

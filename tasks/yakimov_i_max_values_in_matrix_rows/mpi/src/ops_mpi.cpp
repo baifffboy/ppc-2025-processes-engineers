@@ -13,9 +13,6 @@
 // #include "util/include/util.hpp"
 #include "yakimov_i_max_values_in_matrix_rows/common/include/common.hpp"
 
-// NOLINTBEGIN(cppcoreguidelines-pro-type-member-init,readability-redundant-member-init,
-// readability-convert-member-functions-to-static)
-
 namespace yakimov_i_max_values_in_matrix_rows {
 
 namespace {
@@ -136,13 +133,10 @@ bool YakimovIMaxValuesInMatrixRowsMPI::PostProcessingImpl() {
   return true;
 }
 
-YakimovIMaxValuesInMatrixRowsMPI::YakimovIMaxValuesInMatrixRowsMPI(
-    const InType &in)  // NOLINT(cppcoreguidelines-pro-type-member-init)
-    : matrix_(), max_Values_() {
+YakimovIMaxValuesInMatrixRowsMPI::YakimovIMaxValuesInMatrixRowsMPI(const InType &in) : matrix_(), max_Values_() {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
   GetOutput() = 0;
-  // std::filesystem::path exe_path = std::filesystem::read_symlink("/proc/self/exe");
   std::filesystem::path base_path = std::filesystem::current_path();
   while (base_path.filename() == "build") {
     base_path = base_path.parent_path();
@@ -244,8 +238,5 @@ bool YakimovIMaxValuesInMatrixRowsMPI::RunImpl() {
 
   return true;
 }
-
-// NOLINTEND(cppcoreguidelines-pro-type-member-init,readability-redundant-member-init,
-// readability-convert-member-functions-to-static)
 
 }  // namespace yakimov_i_max_values_in_matrix_rows
