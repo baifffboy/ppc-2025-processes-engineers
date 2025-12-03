@@ -9,6 +9,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <vector>
 
 // #include "util/include/util.hpp"
 #include "yakimov_i_max_values_in_matrix_rows/common/include/common.hpp"
@@ -30,9 +31,7 @@ void FindLocalMaxValues(int local_rows, int total_cols, const std::vector<InType
   for (int i = 0; i < local_rows; i++) {
     InType row_max = local_data[static_cast<size_t>(i) * static_cast<size_t>(total_cols)];
     for (int j = 1; j < total_cols; j++) {
-      if (local_data[(i * total_cols) + j] > row_max) {
-        row_max = local_data[(i * total_cols) + j];
-      }
+      row_max = std::max(local_data[(i * total_cols) + j], row_max);
     }
     local_max_values[i] = row_max;
   }
@@ -133,7 +132,7 @@ bool YakimovIMaxValuesInMatrixRowsMPI::PostProcessingImpl() {
   return true;
 }
 
-YakimovIMaxValuesInMatrixRowsMPI::YakimovIMaxValuesInMatrixRowsMPI(const InType &in) : matrix_(), max_Values_() {
+YakimovIMaxValuesInMatrixRowsMPI::YakimovIMaxValuesInMatrixRowsMPI(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
   GetOutput() = 0;

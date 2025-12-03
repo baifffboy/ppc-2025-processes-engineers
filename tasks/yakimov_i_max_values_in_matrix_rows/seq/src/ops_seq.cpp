@@ -12,7 +12,7 @@
 
 namespace yakimov_i_max_values_in_matrix_rows {
 
-YakimovIMaxValuesInMatrixRowsSEQ::YakimovIMaxValuesInMatrixRowsSEQ(const InType &in) : matrix_(), max_Values_() {
+YakimovIMaxValuesInMatrixRowsSEQ::YakimovIMaxValuesInMatrixRowsSEQ(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
   GetOutput() = 0;
