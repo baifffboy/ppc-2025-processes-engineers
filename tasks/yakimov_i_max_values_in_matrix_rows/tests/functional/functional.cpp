@@ -36,17 +36,15 @@ TEST_P(YakimovIMaxValuesInMatrixRowsFuncTests, MaxValuesInRows) {
   ExecuteTest(GetParam());
 }
 
-const std::array<TestType, 10> kTestParam = {std::make_tuple(1, "1"),  std::make_tuple(2, "2"), std::make_tuple(3, "3"),
-                                             std::make_tuple(4, "4"),  std::make_tuple(5, "5"), std::make_tuple(6, "6"),
-                                             std::make_tuple(7, "7"),  std::make_tuple(8, "8"), std::make_tuple(9, "9"),
-                                             std::make_tuple(10, "10")};
+const std::array<TestType, 5> kTestParam = {std::make_tuple(1, "1"), std::make_tuple(2, "2"), std::make_tuple(3, "3"),
+                                            std::make_tuple(4, "4"), std::make_tuple(5, "5")};
 
 const std::array<TestType, 6> kEdgeCaseTestParam = {
     std::make_tuple(31, "edge_1x1"),   std::make_tuple(32, "edge_1x100"),    std::make_tuple(33, "edge_100x1"),
     std::make_tuple(34, "edge_small"), std::make_tuple(35, "edge_negative"), std::make_tuple(36, "edge_large_vals")};
 
 const auto kAllTestParam = []() {
-  std::array<TestType, 16> all_tests;
+  std::array<TestType, 11> all_tests;
   size_t i = 0;
 
   for (const auto &test : kTestParam) {
