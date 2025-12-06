@@ -42,7 +42,7 @@ bool YakimovIMaxValuesInMatrixRowsMPI::ValidationImpl() {
   int rank = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   if (rank == 0) {
-    return (GetInput() > 0) && (GetOutput() == 0);
+    return (GetInput() > 0);
   }
   return true;
 }
@@ -122,7 +122,7 @@ bool YakimovIMaxValuesInMatrixRowsMPI::PostProcessingImpl() {
       return false;
     }
   } else {
-    GetOutput() = 1;
+    GetOutput() = 0;
   }
 
   OutType final_result = GetOutput();

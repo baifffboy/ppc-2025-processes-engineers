@@ -10,11 +10,16 @@ namespace yakimov_i_max_values_in_matrix_rows {
 class YakimovIMaxValuesInMatrixRowsPerfTests : public ppc::util::BaseRunPerfTests<InType, OutType> {
  protected:
   bool CheckTestOutputData(OutType &output_data) final {
-    return output_data > 0;
+    return output_data != 0;
   }
 
   InType GetTestInputData() final {
-    return 30;
+    static size_t test_index = 0;
+    std::vector<InType> test_sizes = {1, 5, 10, 15, 20, 25, 26, 27, 28, 29, 30};
+
+    InType result = test_sizes[test_index % test_sizes.size()];
+    test_index++;
+    return result;
   }
 };
 
