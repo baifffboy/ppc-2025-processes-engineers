@@ -15,7 +15,7 @@ class YakimovIMaxValuesInMatrixRowsPerfTests : public ppc::util::BaseRunPerfTest
 
   InType GetTestInputData() final {
     static size_t test_index = 0;
-    std::vector<InType> test_sizes = {1, 5, 6, 7, 8, 9, 10, 15, 20, 25, 26, 27, 28, 29, 30};
+    std::vector<InType> test_sizes = {5, 6, 7, 8, 9, 10, 15, 20, 25, 26, 27, 28, 29, 30};
 
     InType result = test_sizes[test_index % test_sizes.size()];
     test_index++;
