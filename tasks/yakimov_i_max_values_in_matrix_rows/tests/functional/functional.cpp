@@ -4,7 +4,6 @@
 #include <cstddef>
 #include <string>
 #include <tuple>
-#include <utility>
 
 #include "util/include/func_test_util.hpp"
 #include "util/include/util.hpp"
@@ -37,29 +36,17 @@ TEST_P(YakimovIMaxValuesInMatrixRowsFuncTests, MaxValuesInRows) {
   ExecuteTest(GetParam());
 }
 
-const std::array<TestType, 5> kTestParam = {std::make_tuple(1, "1"), std::make_tuple(2, "2"), std::make_tuple(3, "3"),
-                                            std::make_tuple(4, "4"), std::make_tuple(5, "5")};
-
-const std::array<TestType, 6> kEdgeCaseTestParam = {
-    std::make_tuple(31, "edge_1x1"),   std::make_tuple(32, "edge_1x100"),    std::make_tuple(33, "edge_100x1"),
-    std::make_tuple(34, "edge_small"), std::make_tuple(35, "edge_negative"), std::make_tuple(36, "edge_large_vals")};
-
-const auto kAllTestParam = []() {
-  std::array<TestType, 11> all_tests;
-  size_t i = 0;
-
-  for (size_t j = 0; j < kTestParam.size(); ++j) {
-    all_tests[i] = kTestParam[j];
-    ++i;
-  }
-
-  for (size_t j = 0; j < kEdgeCaseTestParam.size(); ++j) {
-    all_tests[i] = kEdgeCaseTestParam[j];
-    ++i;
-  }
-
-  return all_tests;
-}();
+const std::array<TestType, 11> kAllTestParam = {std::make_tuple(1, "1"),
+                                                std::make_tuple(2, "2"),
+                                                std::make_tuple(3, "3"),
+                                                std::make_tuple(4, "4"),
+                                                std::make_tuple(5, "5"),
+                                                std::make_tuple(31, "edge_1x1"),
+                                                std::make_tuple(32, "edge_1x100"),
+                                                std::make_tuple(33, "edge_100x1"),
+                                                std::make_tuple(34, "edge_small"),
+                                                std::make_tuple(35, "edge_negative"),
+                                                std::make_tuple(36, "edge_large_vals")};
 
 const auto kTestTasksList = std::tuple_cat(ppc::util::AddFuncTask<YakimovIMaxValuesInMatrixRowsMPI, InType>(
                                                kAllTestParam, PPC_SETTINGS_yakimov_i_max_values_in_matrix_rows),
