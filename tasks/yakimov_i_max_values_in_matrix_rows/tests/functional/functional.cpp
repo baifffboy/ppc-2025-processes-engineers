@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <string>
 #include <tuple>
+#include <utility>
 
 #include "util/include/func_test_util.hpp"
 #include "util/include/util.hpp"
@@ -47,12 +48,14 @@ const auto kAllTestParam = []() {
   std::array<TestType, 11> all_tests;
   size_t i = 0;
 
-  for (const auto &test : kTestParam) {
-    all_tests[i++] = test;
+  for (size_t j = 0; j < kTestParam.size(); ++j) {
+    all_tests[i] = kTestParam[j];
+    ++i;
   }
 
-  for (const auto &test : kEdgeCaseTestParam) {
-    all_tests[i++] = test;
+  for (size_t j = 0; j < kEdgeCaseTestParam.size(); ++j) {
+    all_tests[i] = kEdgeCaseTestParam[j];
+    ++i;
   }
 
   return all_tests;
