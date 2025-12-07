@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
+#include <array>
 #include <cstddef>
-#include <vector>
 
 #include "util/include/perf_test_util.hpp"
 #include "yakimov_i_max_values_in_matrix_rows/common/include/common.hpp"
@@ -18,10 +18,8 @@ class YakimovIMaxValuesInMatrixRowsPerfTests : public ppc::util::BaseRunPerfTest
 
   InType GetTestInputData() final {
     static size_t test_index = 0;
-    static constexpr InType test_sizes[] = {5, 6, 7, 8, 9, 10, 15, 20, 25, 26, 27, 28, 29, 30};
-    static constexpr size_t test_sizes_count = sizeof(test_sizes) / sizeof(test_sizes[0]);
-
-    InType result = test_sizes[test_index % test_sizes_count];
+    static constexpr std::array<InType, 9> kTestSizes = {10, 15, 20, 25, 26, 27, 28, 29, 30};
+    InType result = kTestSizes.at(test_index % kTestSizes.size());
     test_index++;
     return result;
   }
