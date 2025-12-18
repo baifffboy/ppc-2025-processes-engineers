@@ -8,22 +8,22 @@
 
 namespace yakimov_i_linear_virtual_topology {
 
-NesterovATestTaskSEQ::NesterovATestTaskSEQ(const InType &in) {
+YakimovILinearVirtualTopologySEQ::YakimovILinearVirtualTopologySEQ(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
   GetOutput() = 0;
 }
 
-bool NesterovATestTaskSEQ::ValidationImpl() {
+bool YakimovILinearVirtualTopologySEQ::ValidationImpl() {
   return (GetInput() > 0) && (GetOutput() == 0);
 }
 
-bool NesterovATestTaskSEQ::PreProcessingImpl() {
+bool YakimovILinearVirtualTopologySEQ::PreProcessingImpl() {
   GetOutput() = 2 * GetInput();
   return GetOutput() > 0;
 }
 
-bool NesterovATestTaskSEQ::RunImpl() {
+bool YakimovILinearVirtualTopologySEQ::RunImpl() {
   if (GetInput() == 0) {
     return false;
   }
@@ -52,7 +52,7 @@ bool NesterovATestTaskSEQ::RunImpl() {
   return GetOutput() > 0;
 }
 
-bool NesterovATestTaskSEQ::PostProcessingImpl() {
+bool YakimovILinearVirtualTopologySEQ::PostProcessingImpl() {
   GetOutput() -= GetInput();
   return GetOutput() > 0;
 }

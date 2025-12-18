@@ -10,22 +10,22 @@
 
 namespace yakimov_i_linear_virtual_topology {
 
-NesterovATestTaskMPI::NesterovATestTaskMPI(const InType &in) {
+YakimovILinearVirtualTopologyMPI::YakimovILinearVirtualTopologyMPI(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
   GetOutput() = 0;
 }
 
-bool NesterovATestTaskMPI::ValidationImpl() {
+bool YakimovILinearVirtualTopologyMPI::ValidationImpl() {
   return (GetInput() > 0) && (GetOutput() == 0);
 }
 
-bool NesterovATestTaskMPI::PreProcessingImpl() {
+bool YakimovILinearVirtualTopologyMPI::PreProcessingImpl() {
   GetOutput() = 2 * GetInput();
   return GetOutput() > 0;
 }
 
-bool NesterovATestTaskMPI::RunImpl() {
+bool YakimovILinearVirtualTopologyMPI::RunImpl() {
   auto input = GetInput();
   if (input == 0) {
     return false;
@@ -64,7 +64,7 @@ bool NesterovATestTaskMPI::RunImpl() {
   return GetOutput() > 0;
 }
 
-bool NesterovATestTaskMPI::PostProcessingImpl() {
+bool YakimovILinearVirtualTopologyMPI::PostProcessingImpl() {
   GetOutput() -= GetInput();
   return GetOutput() > 0;
 }

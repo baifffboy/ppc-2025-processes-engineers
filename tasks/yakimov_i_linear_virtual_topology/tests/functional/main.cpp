@@ -72,8 +72,8 @@ TEST_P(NesterovARunFuncTestsProcesses2, MatmulFromPic) {
 const std::array<TestType, 3> kTestParam = {std::make_tuple(3, "3"), std::make_tuple(5, "5"), std::make_tuple(7, "7")};
 
 const auto kTestTasksList =
-    std::tuple_cat(ppc::util::AddFuncTask<NesterovATestTaskMPI, InType>(kTestParam, PPC_SETTINGS_yakimov_i_linear_virtual_topology),
-                   ppc::util::AddFuncTask<NesterovATestTaskSEQ, InType>(kTestParam, PPC_SETTINGS_yakimov_i_linear_virtual_topology));
+    std::tuple_cat(ppc::util::AddFuncTask<YakimovILinearVirtualTopologyMPI, InType>(kTestParam, PPC_SETTINGS_yakimov_i_linear_virtual_topology),
+                   ppc::util::AddFuncTask<YakimovILinearVirtualTopologySEQ, InType>(kTestParam, PPC_SETTINGS_yakimov_i_linear_virtual_topology));
 
 const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
 

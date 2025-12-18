@@ -5,12 +5,12 @@
 
 namespace yakimov_i_linear_virtual_topology {
 
-class NesterovATestTaskSEQ : public BaseTask {
+class YakimovILinearVirtualTopologySEQ : public BaseTask {
  public:
   static constexpr ppc::task::TypeOfTask GetStaticTypeOfTask() {
     return ppc::task::TypeOfTask::kSEQ;
   }
-  explicit NesterovATestTaskSEQ(const InType &in);
+  explicit YakimovILinearVirtualTopologySEQ(const InType &in);
 
  private:
   bool ValidationImpl() override;

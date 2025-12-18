@@ -5,12 +5,12 @@
 
 namespace yakimov_i_linear_virtual_topology {
 
-class NesterovATestTaskMPI : public BaseTask {
+class YakimovILinearVirtualTopologyMPI : public BaseTask {
  public:
   static constexpr ppc::task::TypeOfTask GetStaticTypeOfTask() {
     return ppc::task::TypeOfTask::kMPI;
   }
-  explicit NesterovATestTaskMPI(const InType &in);
+  explicit YakimovILinearVirtualTopologyMPI(const InType &in);
 
  private:
   bool ValidationImpl() override;

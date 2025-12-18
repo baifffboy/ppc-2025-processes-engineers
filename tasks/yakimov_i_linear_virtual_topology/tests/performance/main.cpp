@@ -29,7 +29,7 @@ TEST_P(ExampleRunPerfTestProcesses2, RunPerfModes) {
 }
 
 const auto kAllPerfTasks =
-    ppc::util::MakeAllPerfTasks<InType, NesterovATestTaskMPI, NesterovATestTaskSEQ>(PPC_SETTINGS_yakimov_i_linear_virtual_topology);
+    ppc::util::MakeAllPerfTasks<InType, YakimovILinearVirtualTopologyMPI, YakimovILinearVirtualTopologySEQ>(PPC_SETTINGS_yakimov_i_linear_virtual_topology);
 
 const auto kGtestValues = ppc::util::TupleToGTestValues(kAllPerfTasks);
 
