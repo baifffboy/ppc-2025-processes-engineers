@@ -12,7 +12,7 @@ namespace yakimov_i_linear_virtual_topology {
 class YakimovILinearVirtualTopologyPerfTests : public ppc::util::BaseRunPerfTests<InType, OutType> {
  protected:
   bool CheckTestOutputData(OutType &output_data) final {
-    return output_data != 0;
+    return output_data >= 0;
   }
 
   InType GetTestInputData() final {

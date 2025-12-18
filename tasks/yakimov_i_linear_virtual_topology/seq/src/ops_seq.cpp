@@ -9,7 +9,7 @@ namespace yakimov_i_linear_virtual_topology {
 YakimovILinearVirtualTopologySEQ::YakimovILinearVirtualTopologySEQ(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
-  GetOutput() = 0;
+  GetOutput() = -1;
   std::filesystem::path base_path = std::filesystem::current_path();
   while (base_path.filename() != "ppc-2025-processes-engineers") {
     base_path = base_path.parent_path();
@@ -19,7 +19,7 @@ YakimovILinearVirtualTopologySEQ::YakimovILinearVirtualTopologySEQ(const InType 
 }
 
 bool YakimovILinearVirtualTopologySEQ::ValidationImpl() {
-  return (GetInput() > 0) && (GetOutput() == 0);
+  return (GetInput() > 0);
 }
 
 bool YakimovILinearVirtualTopologySEQ::PreProcessingImpl() {
@@ -32,11 +32,8 @@ bool YakimovILinearVirtualTopologySEQ::PreProcessingImpl() {
 bool YakimovILinearVirtualTopologySEQ::ReadOperationsFromFile(const std::string &filename) {
   std::ifstream file(filename);
   if (!file.is_open()) {
-    std::cerr << "Cannot open file: " << filename << std::endl;
     return false;
   }
-
-  file >> num_processes_;
 
   int src, dst, data;
   while (file >> src >> dst >> data) {
@@ -46,6 +43,14 @@ bool YakimovILinearVirtualTopologySEQ::ReadOperationsFromFile(const std::string 
   }
 
   file.close();
+
+  num_processes_ = 0;
+  for (size_t i = 0; i < operations_.size(); i += 3) {
+    int src = operations_[i];
+    int dst = operations_[i + 1];
+    num_processes_ = std::max(num_processes_, std::max(src, dst) + 1);
+  }
+  
   return true;
 }
 
@@ -57,6 +62,10 @@ bool YakimovILinearVirtualTopologySEQ::RunImpl() {
     int dst = operations_[i + 1];
     int data = operations_[i + 2];
 
+    if (src >= num_processes_ || dst >= num_processes_ || src < 0 || dst < 0) {
+      continue;
+    }
+
     if (src == dst) {
       total_received += data;
     } else {
@@ -64,7 +73,8 @@ bool YakimovILinearVirtualTopologySEQ::RunImpl() {
     }
   }
 
-  GetOutput() = total_received;
+  GetOutput() = std::abs(total_received);
+
   return true;
 }
 

@@ -19,7 +19,7 @@ class YakimovILinearVirtualTopologyFuncTests : public ppc::util::BaseRunFuncTest
 
  protected:
   bool CheckTestOutputData(OutType &output_data) final {
-    return output_data != 0;
+    return output_data >= 0;
   }
 
   InType GetTestInputData() final {

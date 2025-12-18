@@ -20,12 +20,12 @@ class YakimovILinearVirtualTopologyMPI : public BaseTask {
   bool PreProcessingImpl() override;
   bool RunImpl() override;
   bool PostProcessingImpl() override;
-
+  
   bool ReadOperationsFromFile(const std::string &filename);
   void BroadcastOperations();
-
+  
   std::vector<int> operations_;
-  int num_processes_;
+  int num_processes_;           
   std::string data_filename_;
 };
 

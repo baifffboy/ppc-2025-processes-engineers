@@ -22,8 +22,8 @@ class YakimovILinearVirtualTopologySEQ : public BaseTask {
   bool PostProcessingImpl() override;
   bool ReadOperationsFromFile(const std::string &filename);
 
-  std::vector<int> operations_;  // [src1, dst1, data1, src2, dst2, data2, ...]
-  int num_processes_;            // Количество процессов для топологии
+  std::vector<int> operations_;
+  int num_processes_;
   std::string data_filename_;
 };
 
