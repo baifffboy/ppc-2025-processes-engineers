@@ -50,7 +50,7 @@ bool YakimovILinearVirtualTopologySEQ::ReadOperationsFromFile(const std::string 
     int dst = operations_[i + 1];
     num_processes_ = std::max(num_processes_, std::max(src, dst) + 1);
   }
-  
+
   return true;
 }
 
