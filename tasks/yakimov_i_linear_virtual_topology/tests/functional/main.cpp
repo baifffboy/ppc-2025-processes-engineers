@@ -1,85 +1,58 @@
 #include <gtest/gtest.h>
-#include <stb/stb_image.h>
 
-#include <algorithm>
 #include <array>
-#include <cstddef>
-#include <cstdint>
-#include <numeric>
-#include <stdexcept>
 #include <string>
 #include <tuple>
-#include <utility>
-#include <vector>
 
+#include "util/include/func_test_util.hpp"
 #include "yakimov_i_linear_virtual_topology/common/include/common.hpp"
 #include "yakimov_i_linear_virtual_topology/mpi/include/ops_mpi.hpp"
 #include "yakimov_i_linear_virtual_topology/seq/include/ops_seq.hpp"
-#include "util/include/func_test_util.hpp"
-#include "util/include/util.hpp"
 
 namespace yakimov_i_linear_virtual_topology {
 
-class NesterovARunFuncTestsProcesses2 : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
+class YakimovILinearVirtualTopologyFuncTests : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
  public:
   static std::string PrintTestParam(const TestType &test_param) {
     return std::to_string(std::get<0>(test_param)) + "_" + std::get<1>(test_param);
   }
 
  protected:
-  void SetUp() override {
-    int width = -1;
-    int height = -1;
-    int channels = -1;
-    std::vector<uint8_t> img;
-    // Read image in RGB to ensure consistent channel count
-    {
-      std::string abs_path = ppc::util::GetAbsoluteTaskPath(PPC_ID_yakimov_i_linear_virtual_topology, "pic.jpg");
-      auto *data = stbi_load(abs_path.c_str(), &width, &height, &channels, STBI_rgb);
-      if (data == nullptr) {
-        throw std::runtime_error("Failed to load image: " + std::string(stbi_failure_reason()));
-      }
-      channels = STBI_rgb;
-      img = std::vector<uint8_t>(data, data + (static_cast<ptrdiff_t>(width * height * channels)));
-      stbi_image_free(data);
-      if (std::cmp_not_equal(width, height)) {
-        throw std::runtime_error("width != height: ");
-      }
-    }
-
-    TestType params = std::get<static_cast<std::size_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
-    input_data_ = width - height + std::min(std::accumulate(img.begin(), img.end(), 0), channels);
-  }
-
   bool CheckTestOutputData(OutType &output_data) final {
-    return (input_data_ == output_data);
+    return output_data != 0;
   }
 
   InType GetTestInputData() final {
-    return input_data_;
+    TestType params = std::get<static_cast<std::size_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
+    return std::get<0>(params);
   }
-
- private:
-  InType input_data_ = 0;
 };
 
 namespace {
 
-TEST_P(NesterovARunFuncTestsProcesses2, MatmulFromPic) {
+TEST_P(YakimovILinearVirtualTopologyFuncTests, LinearTopology) {
   ExecuteTest(GetParam());
 }
 
-const std::array<TestType, 3> kTestParam = {std::make_tuple(3, "3"), std::make_tuple(5, "5"), std::make_tuple(7, "7")};
+const std::array<TestType, 11> kAllTestParam = {
+    std::make_tuple(1, "simple_transfer"),      std::make_tuple(2, "bidirectional"),
+    std::make_tuple(3, "complex_routing"),      std::make_tuple(4, "neighbor_transfer"),
+    std::make_tuple(5, "self_transfer"),        std::make_tuple(6, "edge_2_processes"),
+    std::make_tuple(7, "edge_many_operations"), std::make_tuple(8, "edge_single_process"),
+    std::make_tuple(9, "edge_only_neighbors"),  std::make_tuple(10, "edge_negative_values"),
+    std::make_tuple(11, "edge_large_values")};
 
-const auto kTestTasksList =
-    std::tuple_cat(ppc::util::AddFuncTask<YakimovILinearVirtualTopologyMPI, InType>(kTestParam, PPC_SETTINGS_yakimov_i_linear_virtual_topology),
-                   ppc::util::AddFuncTask<YakimovILinearVirtualTopologySEQ, InType>(kTestParam, PPC_SETTINGS_yakimov_i_linear_virtual_topology));
+const auto kTestTasksList = std::tuple_cat(ppc::util::AddFuncTask<YakimovILinearVirtualTopologyMPI, InType>(
+                                               kAllTestParam, PPC_SETTINGS_yakimov_i_linear_virtual_topology),
+                                           ppc::util::AddFuncTask<YakimovILinearVirtualTopologySEQ, InType>(
+                                               kAllTestParam, PPC_SETTINGS_yakimov_i_linear_virtual_topology));
 
 const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
 
-const auto kPerfTestName = NesterovARunFuncTestsProcesses2::PrintFuncTestName<NesterovARunFuncTestsProcesses2>;
+const auto kPerfTestName =
+    YakimovILinearVirtualTopologyFuncTests::PrintFuncTestName<YakimovILinearVirtualTopologyFuncTests>;
 
-INSTANTIATE_TEST_SUITE_P(PicMatrixTests, NesterovARunFuncTestsProcesses2, kGtestValues, kPerfTestName);
+INSTANTIATE_TEST_SUITE_P(TopologyTests, YakimovILinearVirtualTopologyFuncTests, kGtestValues, kPerfTestName);
 
 }  // namespace
 

@@ -1,10 +1,8 @@
 #include "yakimov_i_linear_virtual_topology/seq/include/ops_seq.hpp"
 
-#include <numeric>
-#include <vector>
-
-#include "yakimov_i_linear_virtual_topology/common/include/common.hpp"
-#include "util/include/util.hpp"
+#include <filesystem>
+#include <fstream>
+#include <iostream>
 
 namespace yakimov_i_linear_virtual_topology {
 
@@ -12,6 +10,12 @@ YakimovILinearVirtualTopologySEQ::YakimovILinearVirtualTopologySEQ(const InType 
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
   GetOutput() = 0;
+  std::filesystem::path base_path = std::filesystem::current_path();
+  while (base_path.filename() != "ppc-2025-processes-engineers") {
+    base_path = base_path.parent_path();
+  }
+  data_filename_ =
+      base_path.string() + "/tasks/yakimov_i_linear_virtual_topology/data/" + std::to_string(GetInput()) + ".txt";
 }
 
 bool YakimovILinearVirtualTopologySEQ::ValidationImpl() {
@@ -19,42 +23,53 @@ bool YakimovILinearVirtualTopologySEQ::ValidationImpl() {
 }
 
 bool YakimovILinearVirtualTopologySEQ::PreProcessingImpl() {
-  GetOutput() = 2 * GetInput();
-  return GetOutput() > 0;
+  if (!ReadOperationsFromFile(data_filename_)) {
+    return false;
+  }
+  return true;
 }
 
-bool YakimovILinearVirtualTopologySEQ::RunImpl() {
-  if (GetInput() == 0) {
+bool YakimovILinearVirtualTopologySEQ::ReadOperationsFromFile(const std::string &filename) {
+  std::ifstream file(filename);
+  if (!file.is_open()) {
+    std::cerr << "Cannot open file: " << filename << std::endl;
     return false;
   }
 
-  for (InType i = 0; i < GetInput(); i++) {
-    for (InType j = 0; j < GetInput(); j++) {
-      for (InType k = 0; k < GetInput(); k++) {
-        std::vector<InType> tmp(i + j + k, 1);
-        GetOutput() += std::accumulate(tmp.begin(), tmp.end(), 0);
-        GetOutput() -= i + j + k;
-      }
+  file >> num_processes_;
+
+  int src, dst, data;
+  while (file >> src >> dst >> data) {
+    operations_.push_back(src);
+    operations_.push_back(dst);
+    operations_.push_back(data);
+  }
+
+  file.close();
+  return true;
+}
+
+bool YakimovILinearVirtualTopologySEQ::RunImpl() {
+  int total_received = 0;
+
+  for (size_t i = 0; i < operations_.size(); i += 3) {
+    int src = operations_[i];
+    int dst = operations_[i + 1];
+    int data = operations_[i + 2];
+
+    if (src == dst) {
+      total_received += data;
+    } else {
+      total_received += data;
     }
   }
 
-  const int num_threads = ppc::util::GetNumThreads();
-  GetOutput() *= num_threads;
-
-  int counter = 0;
-  for (int i = 0; i < num_threads; i++) {
-    counter++;
-  }
-
-  if (counter != 0) {
-    GetOutput() /= counter;
-  }
-  return GetOutput() > 0;
+  GetOutput() = total_received;
+  return true;
 }
 
 bool YakimovILinearVirtualTopologySEQ::PostProcessingImpl() {
-  GetOutput() -= GetInput();
-  return GetOutput() > 0;
+  return true;
 }
 
 }  // namespace yakimov_i_linear_virtual_topology
