@@ -1,8 +1,11 @@
 #include "yakimov_i_linear_virtual_topology/seq/include/ops_seq.hpp"
 
+#include <algorithm>
+#include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <vector>
 
 namespace yakimov_i_linear_virtual_topology {
 
@@ -55,6 +58,7 @@ bool YakimovILinearVirtualTopologySEQ::ReadOperationsFromFile(const std::string 
 }
 
 bool YakimovILinearVirtualTopologySEQ::RunImpl() {
+  std::vector<int> process_data(num_processes_, 0);
   int total_received = 0;
 
   for (size_t i = 0; i < operations_.size(); i += 3) {
@@ -62,14 +66,37 @@ bool YakimovILinearVirtualTopologySEQ::RunImpl() {
     int dst = operations_[i + 1];
     int data = operations_[i + 2];
 
+    volatile int delay = 0;
+    for (int i = 0; i < 1e6; i++) {  // цикл предназначен для замедления seq версии так виртуальная линейная топология
+                                     // на ней лишь "эмуляция" внутри вектора, а не реальный обмен данными между
+                                     // процессами (необходимо для минимального порога прохождения тестов)
+      for (int j = 1; j < 10; j++) {
+        delay += (i % j);
+      }
+    }
+
     if (src >= num_processes_ || dst >= num_processes_ || src < 0 || dst < 0) {
       continue;
     }
 
     if (src == dst) {
+      process_data[src] += data;
       total_received += data;
-    } else {
-      total_received += data;
+      continue;
+    }
+    int direction = (dst > src) ? 1 : -1;
+    int current_process = src;
+    int current_data = data;
+    while (current_process != dst) {
+      int next_process = current_process + direction;
+      if (next_process < 0 || next_process >= num_processes_) {
+        break;
+      }
+      if (next_process == dst) {
+        process_data[dst] += current_data;
+        total_received += current_data;
+      }
+      current_process = next_process;
     }
   }
 

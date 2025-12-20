@@ -68,8 +68,6 @@ bool YakimovILinearVirtualTopologyMPI::PreProcessingImpl() {
 
   BroadcastOperations();
 
-  MPI_Comm_size(MPI_COMM_WORLD, &num_processes_);
-
   return true;
 }
 
