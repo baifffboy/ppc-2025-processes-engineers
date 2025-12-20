@@ -25,7 +25,7 @@
 
 ### SEQ (последовательная эмуляция)
 
-'''
+```
 for (size_t i = 0; i < operations_.size(); i += 3) {
     int src = operations_[i];
     int dst = operations_[i + 1];
@@ -52,11 +52,12 @@ for (size_t i = 0; i < operations_.size(); i += 3) {
         
         current_process = next_process;
     }
-}'''
+}
+```
 
 ### MPI
 
-```// Основной цикл обработки операций
+```
 for (size_t i = 0; i < operations_.size(); i += 3) {
     int src = operations_[i];
     int dst = operations_[i + 1];
@@ -100,7 +101,8 @@ for (size_t i = 0; i < operations_.size(); i += 3) {
             MPI_Send(&received, 1, MPI_INT, next, 0, MPI_COMM_WORLD);
         }
     }
-}```
+}
+```
 
 ## 4. Parallelization Scheme
 
