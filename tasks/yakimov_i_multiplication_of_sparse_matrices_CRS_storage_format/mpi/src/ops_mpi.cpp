@@ -254,66 +254,101 @@ void InitializeLocalRowsOnMaster(int rank, int size, MatrixCRS &matrix_A, Matrix
 }
 
 void GatherRowCounts(int rank, int size, const MatrixCRS &local_result, MatrixCRS &result_matrix) {
-  for (int proc = 0; proc < size; ++proc) {
-    std::vector<int> proc_rows = GetLocalRowsImpl(proc, size, result_matrix.rows);
+  // Получаем локальные строки для текущего процесса
+  std::vector<int> local_rows = GetLocalRowsImpl(rank, size, result_matrix.rows);
 
-    if (rank == proc) {
-      for (size_t j = 0; j < proc_rows.size(); ++j) {
-        int global_row = proc_rows[j];
-        int row_nnz = local_result.row_pointers[j + 1] - local_result.row_pointers[j];
+  // Готовим массив для хранения количества ненулевых элементов по строкам
+  std::vector<int> local_nnz_counts;
+  for (size_t i = 0; i < local_rows.size(); ++i) {
+    int row_nnz = local_result.row_pointers[i + 1] - local_result.row_pointers[i];
+    local_nnz_counts.push_back(row_nnz);
+  }
 
-        if (rank == 0) {
-          result_matrix.row_pointers[static_cast<size_t>(global_row + 1)] = row_nnz;
-        } else {
-          MPI_Send(&row_nnz, 1, MPI_INT, 0, global_row, MPI_COMM_WORLD);
+  if (rank == 0) {
+    // Процесс 0 собирает информацию от всех процессов
+    std::vector<int> all_nnz_counts(static_cast<size_t>(result_matrix.rows), 0);
+
+    // Заполняем собственную информацию
+    for (size_t i = 0; i < local_rows.size(); ++i) {
+      int global_row = local_rows[i];
+      all_nnz_counts[static_cast<size_t>(global_row)] = local_nnz_counts[i];
+    }
+
+    // Получаем информацию от других процессов
+    for (int proc = 1; proc < size; ++proc) {
+      std::vector<int> proc_rows = GetLocalRowsImpl(proc, size, result_matrix.rows);
+      int proc_num_rows = static_cast<int>(proc_rows.size());
+
+      // Всегда получаем сообщение от процесса, даже если оно пустое
+      if (proc_num_rows > 0) {
+        std::vector<int> proc_nnz_counts(static_cast<size_t>(proc_num_rows));
+        MPI_Recv(proc_nnz_counts.data(), proc_num_rows, MPI_INT, proc, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+        for (int i = 0; i < proc_num_rows; ++i) {
+          int global_row = proc_rows[static_cast<size_t>(i)];
+          all_nnz_counts[static_cast<size_t>(global_row)] = proc_nnz_counts[static_cast<size_t>(i)];
         }
+      } else {
+        // Получаем пустое сообщение от процесса без данных
+        int dummy;
+        MPI_Recv(&dummy, 0, MPI_INT, proc, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
       }
     }
 
-    if (rank == 0 && proc != 0) {
-      for (size_t j = 0; j < proc_rows.size(); ++j) {
-        int global_row = proc_rows[j];
-        int row_nnz = 0;
-        MPI_Recv(&row_nnz, 1, MPI_INT, proc, global_row, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        result_matrix.row_pointers[static_cast<size_t>(global_row + 1)] = row_nnz;
-      }
+    // Вычисляем row_pointers
+    result_matrix.row_pointers[0] = 0;
+    for (int i = 0; i < result_matrix.rows; ++i) {
+      result_matrix.row_pointers[i + 1] = result_matrix.row_pointers[i] + all_nnz_counts[static_cast<size_t>(i)];
     }
+
+    // Рассылаем row_pointers всем процессам
+    for (int proc = 1; proc < size; ++proc) {
+      MPI_Send(result_matrix.row_pointers.data(), result_matrix.rows + 1, MPI_INT, proc, 1, MPI_COMM_WORLD);
+    }
+  } else {
+    // Остальные процессы отправляют свою информацию процессу 0
+    if (!local_nnz_counts.empty()) {
+      MPI_Send(local_nnz_counts.data(), static_cast<int>(local_nnz_counts.size()), MPI_INT, 0, 0, MPI_COMM_WORLD);
+    } else {
+      // Если нет данных для отправки, отправляем пустое сообщение
+      int dummy = 0;
+      MPI_Send(&dummy, 0, MPI_INT, 0, 0, MPI_COMM_WORLD);
+    }
+
+    // Получаем row_pointers от процесса 0
+    MPI_Recv(result_matrix.row_pointers.data(), result_matrix.rows + 1, MPI_INT, 0, 1, MPI_COMM_WORLD,
+             MPI_STATUS_IGNORE);
   }
 }
 
 void GatherRowData(int rank, int size, const MatrixCRS &local_result, MatrixCRS &result_matrix) {
-  for (int proc = 0; proc < size; ++proc) {
-    std::vector<int> proc_rows = GetLocalRowsImpl(proc, size, result_matrix.rows);
+  std::vector<int> local_rows = GetLocalRowsImpl(rank, size, result_matrix.rows);
 
-    if (rank == proc) {
-      for (size_t j = 0; j < proc_rows.size(); ++j) {
-        int global_row = proc_rows[j];
-        int local_start = local_result.row_pointers[j];
-        int local_end = local_result.row_pointers[j + 1];
-        int row_nnz = local_end - local_start;
+  if (rank == 0) {
+    // Сначала обрабатываем локальные данные
+    for (size_t i = 0; i < local_rows.size(); ++i) {
+      int global_row = local_rows[i];
+      int local_start = local_result.row_pointers[i];
+      int local_end = local_result.row_pointers[i + 1];
+      int row_nnz = local_end - local_start;
 
-        if (row_nnz > 0) {
-          if (rank == 0) {
-            int row_start = result_matrix.row_pointers[static_cast<size_t>(global_row)];
-            std::copy(local_result.col_indices.begin() + static_cast<size_t>(local_start),
-                      local_result.col_indices.begin() + static_cast<size_t>(local_end),
-                      result_matrix.col_indices.begin() + static_cast<size_t>(row_start));
-            std::copy(local_result.values.begin() + static_cast<size_t>(local_start),
-                      local_result.values.begin() + static_cast<size_t>(local_end),
-                      result_matrix.values.begin() + static_cast<size_t>(row_start));
-          } else {
-            MPI_Send(&local_result.col_indices[static_cast<size_t>(local_start)], row_nnz, MPI_INT, 0, global_row * 2,
-                     MPI_COMM_WORLD);
-            MPI_Send(&local_result.values[static_cast<size_t>(local_start)], row_nnz, MPI_DOUBLE, 0, global_row * 2 + 1,
-                     MPI_COMM_WORLD);
-          }
-        }
+      if (row_nnz > 0) {
+        int row_start = result_matrix.row_pointers[static_cast<size_t>(global_row)];
+        std::copy(local_result.col_indices.begin() + static_cast<size_t>(local_start),
+                  local_result.col_indices.begin() + static_cast<size_t>(local_end),
+                  result_matrix.col_indices.begin() + static_cast<size_t>(row_start));
+        std::copy(local_result.values.begin() + static_cast<size_t>(local_start),
+                  local_result.values.begin() + static_cast<size_t>(local_end),
+                  result_matrix.values.begin() + static_cast<size_t>(row_start));
       }
     }
 
-    if (rank == 0 && proc != 0) {
-      for (size_t j = 0; j < proc_rows.size(); ++j) {
-        int global_row = proc_rows[j];
+    // Получаем данные от других процессов
+    for (int proc = 1; proc < size; ++proc) {
+      std::vector<int> proc_rows = GetLocalRowsImpl(proc, size, result_matrix.rows);
+
+      for (size_t i = 0; i < proc_rows.size(); ++i) {
+        int global_row = proc_rows[i];
         int row_start = result_matrix.row_pointers[static_cast<size_t>(global_row)];
         int row_end = result_matrix.row_pointers[static_cast<size_t>(global_row + 1)];
         int row_nnz = row_end - row_start;
@@ -324,6 +359,21 @@ void GatherRowData(int rank, int size, const MatrixCRS &local_result, MatrixCRS 
           MPI_Recv(&result_matrix.values[static_cast<size_t>(row_start)], row_nnz, MPI_DOUBLE, proc, global_row * 2 + 1,
                    MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
+      }
+    }
+  } else {
+    // Отправляем свои данные процессу 0 (только если есть локальные строки)
+    for (size_t i = 0; i < local_rows.size(); ++i) {
+      int global_row = local_rows[i];
+      int local_start = local_result.row_pointers[i];
+      int local_end = local_result.row_pointers[i + 1];
+      int row_nnz = local_end - local_start;
+
+      if (row_nnz > 0) {
+        MPI_Send(&local_result.col_indices[static_cast<size_t>(local_start)], row_nnz, MPI_INT, 0, global_row * 2,
+                 MPI_COMM_WORLD);
+        MPI_Send(&local_result.values[static_cast<size_t>(local_start)], row_nnz, MPI_DOUBLE, 0, global_row * 2 + 1,
+                 MPI_COMM_WORLD);
       }
     }
   }
@@ -484,20 +534,26 @@ void YakimovIMultiplicationOfSparseMatricesMPI::GatherResults() {
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
+  // Инициализируем result_matrix_ на всех процессах
   if (rank == 0) {
     result_matrix_.rows = rows_A_;
     result_matrix_.cols = cols_B_;
-    result_matrix_.row_pointers.resize(static_cast<size_t>(rows_A_ + 1));
-    result_matrix_.row_pointers[0] = 0;
   }
+
+  // Рассылаем размеры всем процессам
+  int dims[2] = {rows_A_, cols_B_};
+  MPI_Bcast(dims, 2, MPI_INT, 0, MPI_COMM_WORLD);
+
+  if (rank != 0) {
+    result_matrix_.rows = dims[0];
+    result_matrix_.cols = dims[1];
+  }
+
+  result_matrix_.row_pointers.resize(static_cast<size_t>(result_matrix_.rows + 1));
 
   GatherRowCounts(rank, size, local_result_, result_matrix_);
 
   if (rank == 0) {
-    for (int i = 0; i < rows_A_; ++i) {
-      result_matrix_.row_pointers[i + 1] += result_matrix_.row_pointers[i];
-    }
-
     int total_nnz = result_matrix_.row_pointers[static_cast<size_t>(rows_A_)];
     result_matrix_.col_indices.resize(static_cast<size_t>(total_nnz));
     result_matrix_.values.resize(static_cast<size_t>(total_nnz));

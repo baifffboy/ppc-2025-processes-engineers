@@ -1,119 +1,78 @@
-# generate_sparse_matrices.py
-import numpy as np
 import random
 import os
 
-def save_matrix_crs(filename, matrix):
-    """Сохранить матрицу в формате CRS"""
-    rows, cols = matrix.shape
+def generate_matrix_file(rows, cols, density, filename):
+    """Генерирует корректный файл матрицы в формате CRS"""
     with open(filename, 'w') as f:
-        # Размеры матрицы
         f.write(f"{rows} {cols}\n")
         
         for i in range(rows):
-            row_values = []
-            row_cols = []
-            for j in range(cols):
-                if matrix[i, j] != 0:
-                    row_values.append(matrix[i, j])
-                    row_cols.append(j)
+            # Определяем ненулевые элементы в строке
+            max_nnz = int(cols * density)
+            if max_nnz == 0:
+                max_nnz = 1
             
-            # Записываем количество ненулевых элементов в строке
-            f.write(f"{len(row_values)} ")
+            # Выбираем случайное количество ненулевых элементов
+            nnz = random.randint(0, max_nnz)
+            
+            # Выбираем случайные столбцы
+            if nnz > 0:
+                cols_indices = random.sample(range(cols), nnz)
+                cols_indices.sort()
+            else:
+                cols_indices = []
+            
+            f.write(f"{nnz} ")
+            
             # Записываем индексы столбцов
-            for col in row_cols:
+            for col in cols_indices:
                 f.write(f"{col} ")
+            
             # Записываем значения
-            for val in row_values:
-                f.write(f"{val:.6f} ")
+            for _ in cols_indices:
+                value = random.uniform(-100.0, 100.0)
+                f.write(f"{value:.6f} ")
+            
             f.write("\n")
 
-def generate_sparse_matrix(rows, cols, density=0.01):
-    """Сгенерировать разреженную матрицу"""
-    matrix = np.zeros((rows, cols), dtype=np.float64)
-    total_elements = rows * cols
-    nonzero_count = int(total_elements * density)
+def generate_test_files():
+    """Генерирует все тестовые файлы"""
+    os.makedirs("data", exist_ok=True)
     
-    # Генерируем ненулевые элементы
-    for _ in range(nonzero_count):
-        i = random.randint(0, rows - 1)
-        j = random.randint(0, cols - 1)
-        value = random.uniform(-100.0, 100.0)
-        matrix[i, j] = value
-    
-    return matrix
-
-def main():
-    # Создаем директорию для данных
-    data_dir = "data"
-    os.makedirs(data_dir, exist_ok=True)
-    
-    # Функциональные тесты (маленькие матрицы)
-    print("Generating functional tests...")
+    # Маленькие тестовые матрицы (1-10)
     test_cases = [
-        # (rows, cols, density, test_id)
-        (3, 3, 0.3, 1),      # Маленькая квадратная
-        (2, 4, 0.4, 2),      # Прямоугольная
-        (4, 2, 0.4, 3),      # Прямоугольная другая
-        (5, 5, 0.2, 4),      # Средняя квадратная
-        (3, 5, 0.25, 5),     # Прямоугольная
-        (1, 1, 1.0, 31),     # Edge case: 1x1
-        (1, 100, 0.05, 32),  # Edge case: 1x100
-        (100, 1, 0.05, 33),  # Edge case: 100x1
-        (10, 10, 0.1, 34),   # Edge case: маленькая
-        (5, 5, 0.0, 35),     # Edge case: все нули
-        (20, 20, 0.5, 36),   # Edge case: большая плотность
+        (3, 3, 0.3),    # 1.txt - маленькая квадратная
+        (2, 4, 0.4),    # 2.txt - прямоугольная 2x4
+        (4, 2, 0.4),    # 3.txt - прямоугольная 4x2
+        (10, 10, 0.2),  # 4.txt - средняя квадратная
+        (3, 5, 0.3),    # 5.txt - прямоугольная 3x5
+        (1, 1, 1.0),    # 31.txt - крайний случай 1x1
+        (1, 100, 0.1),  # 32.txt - крайний случай 1x100
+        (100, 1, 0.1),  # 33.txt - крайний случай 100x1
+        (5, 5, 0.1),    # 34.txt - маленькая с низкой плотностью
+        (5, 5, 0.0),    # 35.txt - все нули
+        (5, 5, 0.8),    # 36.txt - высокая плотность
     ]
     
-    for rows, cols, density, test_id in test_cases:
-        matrix = generate_sparse_matrix(rows, cols, density)
-        filename = os.path.join(data_dir, f"{test_id}.txt")
-        save_matrix_crs(filename, matrix)
-        print(f"Generated {filename}: {rows}x{cols}, density={density}")
+    for i, (rows, cols, density) in enumerate(test_cases):
+        idx = i + 1 if i < 5 else 30 + (i - 4)  # 1-5, 31-36
+        generate_matrix_file(rows, cols, density, f"data/A_{idx}.txt")
+        # Для матрицы B нужны совместимые размеры (cols_B = rows_A следующей матрицы)
+        if i < len(test_cases) - 1:
+            next_rows = test_cases[i + 1][0]
+        else:
+            next_rows = test_cases[0][0]
+        generate_matrix_file(cols, next_rows, density, f"data/B_{idx}.txt")
     
-    # Производительные тесты (большие матрицы)
-    print("\nGenerating performance tests...")
-    perf_cases = [
-        (3000, 4000, 0.001, 27),
-        (4000, 3000, 0.001, 28),
-        (3500, 3500, 0.002, 29),
-        (5000, 3000, 0.001, 30),
-    ]
-    
-    for rows, cols, density, test_id in perf_cases:
-        matrix = generate_sparse_matrix(rows, cols, density)
-        filename = os.path.join(data_dir, f"{test_id}.txt")
-        save_matrix_crs(filename, matrix)
-        print(f"Generated {filename}: {rows}x{cols}, density={density}")
-    
-    # Генерация матриц для умножения (нужны две матрицы A и B)
-    print("\nGenerating multiplication test cases...")
-    # Для теста 1 (умножение 3x3 * 3x3)
-    A = generate_sparse_matrix(3, 3, 0.3)
-    B = generate_sparse_matrix(3, 3, 0.3)
-    
-    # Сохраняем как пары файлов
-    for test_id in [1, 2, 3, 4, 5, 27, 28, 29, 30]:
-        # Для каждого теста создаем соответствующую пару матриц
-        if test_id <= 5:
-            size = test_id + 2
-            A = generate_sparse_matrix(size, size, 0.1 + test_id*0.05)
-            B = generate_sparse_matrix(size, size, 0.1 + test_id*0.05)
-        elif test_id >= 27:
-            rows = [3000, 4000, 3500, 5000][test_id-27]
-            cols = rows
-            A = generate_sparse_matrix(rows, cols, 0.001)
-            B = generate_sparse_matrix(cols, rows // 2, 0.001)
-        
-        # Сохраняем матрицу A
-        filename_a = os.path.join(data_dir, f"A_{test_id}.txt")
-        save_matrix_crs(filename_a, A)
-        
-        # Сохраняем матрицу B
-        filename_b = os.path.join(data_dir, f"B_{test_id}.txt")
-        save_matrix_crs(filename_b, B)
-        
-        print(f"Generated {filename_a} and {filename_b}")
+    # Большие матрицы для производительности (27-30)
+    for i in range(27, 31):
+        rows = random.randint(3000, 5000)
+        cols = random.randint(3000, 5000)
+        generate_matrix_file(rows, cols, 0.01, f"data/A_{i}.txt")
+        # Матрица B должна быть совместима с A (cols_A = rows_B)
+        b_cols = random.randint(3000, 5000)
+        generate_matrix_file(cols, b_cols, 0.01, f"data/B_{i}.txt")
 
 if __name__ == "__main__":
-    main()
+    generate_test_files()
+    print("Тестовые файлы успешно созданы!")
