@@ -27,7 +27,7 @@ class YakimovILinearVirtualTopologyMPI : public BaseTask {
   int ProcessAllOperations();
   int ProcessSingleOperation(int src, int dst, int data);
   [[nodiscard]] bool IsValidOperation(int src, int dst) const;
-  int ProcessSameProcessOperation(int process_id, int data);
+  int ProcessSameProcessOperation(int process_id, int data) const;
   int ProcessDifferentProcessOperation(int src, int dst, int data);
   [[nodiscard]] static int CalculateDirection(int src, int dst);
   int ProcessDataTransfer(int src, int dst, int data, int direction);
