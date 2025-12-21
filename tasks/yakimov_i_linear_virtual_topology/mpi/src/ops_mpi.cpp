@@ -9,10 +9,12 @@
 #include <fstream>
 #include <string>
 
+#include "yakimov_i_linear_virtual_topology/common/include/common.hpp"  // Добавлен include
+
 namespace yakimov_i_linear_virtual_topology {
 
-YakimovILinearVirtualTopologyMPI::YakimovILinearVirtualTopologyMPI(const InType &in) 
-    : num_processes_(0), rank_(0), size_(0) {
+YakimovILinearVirtualTopologyMPI::YakimovILinearVirtualTopologyMPI(const InType &in)
+    : num_processes_{0} {  // Убрана инициализация rank_ и size_ (уже в заголовке)
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
   GetOutput() = -1;
@@ -122,10 +124,10 @@ int YakimovILinearVirtualTopologyMPI::ProcessSingleOperation(int src, int dst, i
 }
 
 bool YakimovILinearVirtualTopologyMPI::IsValidOperation(int src, int dst) const {
-  return !(src >= size_ || dst >= size_ || src < 0 || dst < 0);
+  return src < size_ && dst < size_ && src >= 0 && dst >= 0;  // Исправлено по DeMorgan
 }
 
-int YakimovILinearVirtualTopologyMPI::ProcessSameProcessOperation(int process_id, int data) {
+int YakimovILinearVirtualTopologyMPI::ProcessSameProcessOperation(int process_id, int data) const {
   if (rank_ == process_id) {
     return data;
   }
@@ -144,7 +146,7 @@ int YakimovILinearVirtualTopologyMPI::ProcessDifferentProcessOperation(int src, 
   return ProcessDataTransfer(src, dst, data, direction);
 }
 
-int YakimovILinearVirtualTopologyMPI::CalculateDirection(int src, int dst) const {
+int YakimovILinearVirtualTopologyMPI::CalculateDirection(int src, int dst) {
   return (dst > src) ? 1 : -1;
 }
 
@@ -161,12 +163,12 @@ int YakimovILinearVirtualTopologyMPI::ProcessDataTransfer(int src, int dst, int 
   return ForwardDataBetweenProcesses(direction);
 }
 
-void YakimovILinearVirtualTopologyMPI::SendDataToNextProcess(int data, int direction) {
+void YakimovILinearVirtualTopologyMPI::SendDataToNextProcess(int data, int direction) const {
   int next = rank_ + direction;
   MPI_Send(&data, 1, MPI_INT, next, 0, MPI_COMM_WORLD);
 }
 
-int YakimovILinearVirtualTopologyMPI::ReceiveDataFromPreviousProcess(int direction) {
+int YakimovILinearVirtualTopologyMPI::ReceiveDataFromPreviousProcess(int direction) const {
   int received = 0;
   MPI_Status status;
   int prev = rank_ - direction;
@@ -175,7 +177,7 @@ int YakimovILinearVirtualTopologyMPI::ReceiveDataFromPreviousProcess(int directi
   return received;
 }
 
-int YakimovILinearVirtualTopologyMPI::ForwardDataBetweenProcesses(int direction) {
+int YakimovILinearVirtualTopologyMPI::ForwardDataBetweenProcesses(int direction) const {
   int received = 0;
   MPI_Status status;
   int prev = rank_ - direction;
