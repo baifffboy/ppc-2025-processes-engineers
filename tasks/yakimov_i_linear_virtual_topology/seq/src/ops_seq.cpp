@@ -9,8 +9,6 @@
 #include <string>
 #include <vector>
 
-#include "yakimov_i_linear_virtual_topology/common/include/common.hpp"  // Добавлен include
-
 namespace yakimov_i_linear_virtual_topology {
 
 YakimovILinearVirtualTopologySEQ::YakimovILinearVirtualTopologySEQ(const InType &in) {
@@ -52,8 +50,8 @@ bool YakimovILinearVirtualTopologySEQ::ReadOperationsFromFile(const std::string 
 
   num_processes_ = 0;
   for (size_t i = 0; i < operations_.size(); i += 3) {
-    int current_src = operations_[i];      // Переименовано
-    int current_dst = operations_[i + 1];  // Переименовано
+    int current_src = operations_[i];
+    int current_dst = operations_[i + 1];
     num_processes_ = std::max(num_processes_, std::max(current_src, current_dst) + 1);
   }
 
@@ -76,7 +74,13 @@ void YakimovILinearVirtualTopologySEQ::ProcessAllOperations(std::vector<int> &pr
     int dst_val = operations_[i + 1];
     int data_val = operations_[i + 2];
 
-    ApplyArtificialDelay();
+    volatile int delay = 0;
+    for (int i = 0; i < 1e6; i++) {
+      for (int j = 1; j < 10; j++) {
+        delay += (i % j);
+      }
+    }
+    (void)delay;
 
     if (!IsValidProcessId(src_val) || !IsValidProcessId(dst_val)) {
       continue;
@@ -84,17 +88,6 @@ void YakimovILinearVirtualTopologySEQ::ProcessAllOperations(std::vector<int> &pr
 
     ProcessSingleOperation(src_val, dst_val, data_val, process_data, total_received);
   }
-}
-
-// Статический метод - не использует члены класса
-/*static*/ void YakimovILinearVirtualTopologySEQ::ApplyArtificialDelay() {
-  volatile int delay = 0;
-  for (int i = 0; i < 1e6; i++) {
-    for (int j = 1; j < 10; j++) {
-      delay += (i % j);
-    }
-  }
-  (void)delay;
 }
 
 [[nodiscard]] bool YakimovILinearVirtualTopologySEQ::IsValidProcessId(int process_id) const {
@@ -111,7 +104,6 @@ void YakimovILinearVirtualTopologySEQ::ProcessSingleOperation(int src, int dst, 
   HandleDifferentProcessTransfer(src, dst, data, process_data, total_received);
 }
 
-// Этот метод НЕЛЬЗЯ сделать static - он изменяет параметры
 void YakimovILinearVirtualTopologySEQ::HandleSameProcessTransfer(int process_id, int data,
                                                                  std::vector<int> &process_data, int &total_received) {
   process_data[process_id] += data;

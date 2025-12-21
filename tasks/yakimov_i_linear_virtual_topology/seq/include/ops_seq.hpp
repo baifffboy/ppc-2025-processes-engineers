@@ -23,7 +23,6 @@ class YakimovILinearVirtualTopologySEQ : public BaseTask {
 
   bool ReadOperationsFromFile(const std::string &filename);
   void ProcessAllOperations(std::vector<int> &process_data, int &total_received);
-  static void ApplyArtificialDelay();
   [[nodiscard]] bool IsValidProcessId(int process_id) const;
   void ProcessSingleOperation(int src, int dst, int data, std::vector<int> &process_data, int &total_received);
   void HandleSameProcessTransfer(int process_id, int data, std::vector<int> &process_data, int &total_received);

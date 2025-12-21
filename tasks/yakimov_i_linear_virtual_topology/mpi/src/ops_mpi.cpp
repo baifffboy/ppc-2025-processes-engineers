@@ -9,12 +9,11 @@
 #include <fstream>
 #include <string>
 
-#include "yakimov_i_linear_virtual_topology/common/include/common.hpp"  // Добавлен include
+#include "yakimov_i_linear_virtual_topology/common/include/common.hpp"
 
 namespace yakimov_i_linear_virtual_topology {
 
-YakimovILinearVirtualTopologyMPI::YakimovILinearVirtualTopologyMPI(const InType &in)
-    : num_processes_{0} {  // Убрана инициализация rank_ и size_ (уже в заголовке)
+YakimovILinearVirtualTopologyMPI::YakimovILinearVirtualTopologyMPI(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
   GetOutput() = -1;
@@ -124,7 +123,7 @@ int YakimovILinearVirtualTopologyMPI::ProcessSingleOperation(int src, int dst, i
 }
 
 bool YakimovILinearVirtualTopologyMPI::IsValidOperation(int src, int dst) const {
-  return src < size_ && dst < size_ && src >= 0 && dst >= 0;  // Исправлено по DeMorgan
+  return src < size_ && dst < size_ && src >= 0 && dst >= 0;
 }
 
 int YakimovILinearVirtualTopologyMPI::ProcessSameProcessOperation(int process_id, int data) const {
