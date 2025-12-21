@@ -40,6 +40,8 @@ class YakimovILinearVirtualTopologyMPI : public BaseTask {
   std::vector<int> operations_;
   int num_processes_;
   std::string data_filename_;
+  int rank_ = 0;
+  int size_ = 0;
 };
 
 }  // namespace yakimov_i_linear_virtual_topology
