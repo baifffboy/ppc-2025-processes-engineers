@@ -1,60 +1,196 @@
 #include "yakimov_i_multiplication_of_sparse_matrices_CRS_storage_format/seq/include/ops_seq.hpp"
 
-#include <numeric>
+#include <algorithm>
+#include <cstddef>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <string>
 #include <vector>
 
 #include "yakimov_i_multiplication_of_sparse_matrices_CRS_storage_format/common/include/common.hpp"
-#include "util/include/util.hpp"
 
 namespace yakimov_i_multiplication_of_sparse_matrices_CRS_storage_format {
 
-YakimovIMultiplicationOfSparseMatricesCRSStorageFormatSEQ::YakimovIMultiplicationOfSparseMatricesCRSStorageFormatSEQ(const InType &in) {
-  SetTypeOfTask(GetStaticTypeOfTask());
-  GetInput() = in;
-  GetOutput() = 0;
-}
+namespace {
 
-bool YakimovIMultiplicationOfSparseMatricesCRSStorageFormatSEQ::ValidationImpl() {
-  return (GetInput() > 0) && (GetOutput() == 0);
-}
+bool ReadDimensions(std::ifstream &file, MatrixCRS &matrix) {
+  file >> matrix.rows;
+  file >> matrix.cols;
 
-bool YakimovIMultiplicationOfSparseMatricesCRSStorageFormatSEQ::PreProcessingImpl() {
-  GetOutput() = 2 * GetInput();
-  return GetOutput() > 0;
-}
-
-bool YakimovIMultiplicationOfSparseMatricesCRSStorageFormatSEQ::RunImpl() {
-  if (GetInput() == 0) {
+  if (matrix.rows <= 0 || matrix.cols <= 0) {
     return false;
   }
 
-  for (InType i = 0; i < GetInput(); i++) {
-    for (InType j = 0; j < GetInput(); j++) {
-      for (InType k = 0; k < GetInput(); k++) {
-        std::vector<InType> tmp(i + j + k, 1);
-        GetOutput() += std::accumulate(tmp.begin(), tmp.end(), 0);
-        GetOutput() -= i + j + k;
-      }
+  return true;
+}
+
+bool ReadRowData(std::ifstream &file, MatrixCRS &matrix, int row_index) {
+  int nonzeros = 0;
+  file >> nonzeros;
+
+  for (int j = 0; j < nonzeros; ++j) {
+    int col_idx = 0;
+    file >> col_idx;
+    matrix.col_indices.push_back(col_idx);
+  }
+
+  for (int j = 0; j < nonzeros; ++j) {
+    double value = 0.0;
+    file >> value;
+    matrix.values.push_back(value);
+  }
+
+  matrix.row_pointers[static_cast<size_t>(row_index + 1)] =
+      matrix.row_pointers[static_cast<size_t>(row_index)] + nonzeros;
+
+  return true;
+}
+
+bool ReadMatrixFromFileImpl(const std::string &filename, MatrixCRS &matrix) {
+  std::ifstream file(filename);
+  if (!file.is_open()) {
+    return false;
+  }
+
+  bool success = ReadDimensions(file, matrix);
+  if (!success) {
+    file.close();
+    return false;
+  }
+
+  matrix.row_pointers.resize(static_cast<size_t>(matrix.rows + 1));
+  matrix.row_pointers[0] = 0;
+
+  for (int i = 0; i < matrix.rows; ++i) {
+    success = success && ReadRowData(file, matrix, i);
+  }
+
+  file.close();
+  return success;
+}
+
+void ProcessRowMultiplication(const MatrixCRS &A, const MatrixCRS &B, int row_index, std::vector<double> &row_values) {
+  std::fill(row_values.begin(), row_values.end(), 0.0);
+
+  int row_start_A = A.row_pointers[static_cast<size_t>(row_index)];
+  int row_end_A = A.row_pointers[static_cast<size_t>(row_index + 1)];
+
+  for (int k = row_start_A; k < row_end_A; ++k) {
+    int col_A = A.col_indices[static_cast<size_t>(k)];
+    double val_A = A.values[static_cast<size_t>(k)];
+
+    int row_start_B = B.row_pointers[static_cast<size_t>(col_A)];
+    int row_end_B = B.row_pointers[static_cast<size_t>(col_A + 1)];
+
+    for (int l = row_start_B; l < row_end_B; ++l) {
+      int col_B = B.col_indices[static_cast<size_t>(l)];
+      double val_B = B.values[static_cast<size_t>(l)];
+      row_values[static_cast<size_t>(col_B)] += val_A * val_B;
+    }
+  }
+}
+
+void CollectRowResult(const std::vector<double> &row_values, MatrixCRS &result, int row_index) {
+  for (size_t j = 0; j < row_values.size(); ++j) {
+    if (row_values[j] != 0.0) {
+      result.values.push_back(row_values[j]);
+      result.col_indices.push_back(static_cast<int>(j));
     }
   }
 
-  const int num_threads = ppc::util::GetNumThreads();
-  GetOutput() *= num_threads;
-
-  int counter = 0;
-  for (int i = 0; i < num_threads; i++) {
-    counter++;
-  }
-
-  if (counter != 0) {
-    GetOutput() /= counter;
-  }
-  return GetOutput() > 0;
+  result.row_pointers[static_cast<size_t>(row_index + 1)] = static_cast<int>(result.values.size());
 }
 
-bool YakimovIMultiplicationOfSparseMatricesCRSStorageFormatSEQ::PostProcessingImpl() {
-  GetOutput() -= GetInput();
-  return GetOutput() > 0;
+MatrixCRS MultiplyMatricesImpl(const MatrixCRS &A, const MatrixCRS &B) {
+  MatrixCRS result;
+  result.rows = A.rows;
+  result.cols = B.cols;
+  result.row_pointers.resize(static_cast<size_t>(result.rows + 1));
+  result.row_pointers[0] = 0;
+
+  std::vector<double> row_values(static_cast<size_t>(result.cols), 0.0);
+
+  for (int i = 0; i < A.rows; ++i) {
+    ProcessRowMultiplication(A, B, i, row_values);
+    CollectRowResult(row_values, result, i);
+  }
+
+  return result;
+}
+
+double SumMatrixElementsImpl(const MatrixCRS &matrix) {
+  double sum = 0.0;
+
+  for (size_t i = 0; i < matrix.values.size(); ++i) {
+    sum += matrix.values[i];
+  }
+
+  return sum;
+}
+
+}  // namespace
+
+YakimovIMultiplicationOfSparseMatricesSEQ::YakimovIMultiplicationOfSparseMatricesSEQ(const InType &in) {
+  SetTypeOfTask(GetStaticTypeOfTask());
+  GetInput() = in;
+  GetOutput() = 0.0;
+
+  std::filesystem::path base_path = std::filesystem::current_path();
+  while (base_path.filename() != "ppc-2025-processes-engineers") {
+    base_path = base_path.parent_path();
+  }
+
+  std::string base_dir =
+      base_path.string() + "/tasks/yakimov_i_multiplication_of_sparse_matrices_CRS_storage_format/data/";
+  matrix_A_filename_ = base_dir + "A_" + std::to_string(GetInput()) + ".txt";
+  matrix_B_filename_ = base_dir + "B_" + std::to_string(GetInput()) + ".txt";
+}
+
+bool YakimovIMultiplicationOfSparseMatricesSEQ::ValidationImpl() {
+  bool input_valid = (GetInput() > 0);
+  bool output_valid = (GetOutput() == 0.0);
+  return input_valid && output_valid;
+}
+
+bool YakimovIMultiplicationOfSparseMatricesSEQ::PreProcessingImpl() {
+  bool success = true;
+
+  success = success && ReadMatrixFromFile(matrix_A_filename_, matrix_A_);
+  success = success && ReadMatrixFromFile(matrix_B_filename_, matrix_B_);
+
+  if (!success) {
+    return false;
+  }
+
+  if (matrix_A_.cols != matrix_B_.rows) {
+    return false;
+  }
+
+  return true;
+}
+
+bool YakimovIMultiplicationOfSparseMatricesSEQ::ReadMatrixFromFile(const std::string &filename, MatrixCRS &matrix) {
+  return ReadMatrixFromFileImpl(filename, matrix);
+}
+
+MatrixCRS YakimovIMultiplicationOfSparseMatricesSEQ::MultiplyMatrices(const MatrixCRS &A, const MatrixCRS &B) {
+  return MultiplyMatricesImpl(A, B);
+}
+
+bool YakimovIMultiplicationOfSparseMatricesSEQ::RunImpl() {
+  result_matrix_ = MultiplyMatrices(matrix_A_, matrix_B_);
+  return true;
+}
+
+double YakimovIMultiplicationOfSparseMatricesSEQ::SumMatrixElements(const MatrixCRS &matrix) {
+  return SumMatrixElementsImpl(matrix);
+}
+
+bool YakimovIMultiplicationOfSparseMatricesSEQ::PostProcessingImpl() {
+  double sum = SumMatrixElements(result_matrix_);
+  GetOutput() = sum;
+  return true;
 }
 
 }  // namespace yakimov_i_multiplication_of_sparse_matrices_CRS_storage_format
