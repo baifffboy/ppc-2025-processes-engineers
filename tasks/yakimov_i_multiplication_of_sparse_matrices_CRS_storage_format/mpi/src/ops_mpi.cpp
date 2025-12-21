@@ -78,8 +78,7 @@ bool ReadMatrixFromFileImpl(const std::string &filename, MatrixCRS &matrix) {
   return success;
 }
 
-void ProcessRowMultiplication(const MatrixCRS &A, const MatrixCRS &B,
-                              int row_index, std::vector<double> &row_values) {
+void ProcessRowMultiplication(const MatrixCRS &A, const MatrixCRS &B, int row_index, std::vector<double> &row_values) {
   std::fill(row_values.begin(), row_values.end(), 0.0);
 
   int row_start_A = A.row_pointers[static_cast<size_t>(row_index)];
@@ -100,8 +99,7 @@ void ProcessRowMultiplication(const MatrixCRS &A, const MatrixCRS &B,
   }
 }
 
-void CollectRowResult(const std::vector<double> &row_values,
-                      MatrixCRS &result, int row_index) {
+void CollectRowResult(const std::vector<double> &row_values, MatrixCRS &result, int row_index) {
   for (size_t j = 0; j < row_values.size(); ++j) {
     if (row_values[j] != 0.0) {
       result.values.push_back(row_values[j]);
@@ -109,8 +107,7 @@ void CollectRowResult(const std::vector<double> &row_values,
     }
   }
 
-  result.row_pointers[static_cast<size_t>(row_index + 1)] =
-      static_cast<int>(result.values.size());
+  result.row_pointers[static_cast<size_t>(row_index + 1)] = static_cast<int>(result.values.size());
 }
 
 MatrixCRS MultiplyMatricesImpl(const MatrixCRS &A, const MatrixCRS &B) {
@@ -155,11 +152,8 @@ std::vector<int> GetLocalRowsImpl(int rank, int size, int total_rows) {
   return local_rows;
 }
 
-void PrepareRowDataForSending(const std::vector<int> &proc_rows,
-                              const MatrixCRS &matrix_A,
-                              std::vector<int> &row_nnz,
-                              std::vector<int> &col_indices,
-                              std::vector<double> &values) {
+void PrepareRowDataForSending(const std::vector<int> &proc_rows, const MatrixCRS &matrix_A, std::vector<int> &row_nnz,
+                              std::vector<int> &col_indices, std::vector<double> &values) {
   for (int row_idx : proc_rows) {
     int row_start = matrix_A.row_pointers[static_cast<size_t>(row_idx)];
     int row_end = matrix_A.row_pointers[static_cast<size_t>(row_idx + 1)];
@@ -176,29 +170,27 @@ void PrepareRowDataForSending(const std::vector<int> &proc_rows,
   }
 }
 
-void SendRowDataToProcess(int proc, const std::vector<int> &row_nnz,
-                          const std::vector<int> &col_indices,
+void SendRowDataToProcess(int proc, const std::vector<int> &row_nnz, const std::vector<int> &col_indices,
                           const std::vector<double> &values) {
   int row_nnz_size = static_cast<int>(row_nnz.size());
   MPI_Send(row_nnz.data(), row_nnz_size, MPI_INT, proc, 1, MPI_COMM_WORLD);
 
   int col_indices_size = static_cast<int>(col_indices.size());
   MPI_Send(&col_indices_size, 1, MPI_INT, proc, 2, MPI_COMM_WORLD);
-  
+
   if (col_indices_size > 0) {
     MPI_Send(col_indices.data(), col_indices_size, MPI_INT, proc, 3, MPI_COMM_WORLD);
   }
 
   int values_size = static_cast<int>(values.size());
   MPI_Send(&values_size, 1, MPI_INT, proc, 4, MPI_COMM_WORLD);
-  
+
   if (values_size > 0) {
     MPI_Send(values.data(), values_size, MPI_DOUBLE, proc, 5, MPI_COMM_WORLD);
   }
 }
 
-void SendMatrixDataToProcess(int proc, const std::vector<int> &proc_rows,
-                             const MatrixCRS &matrix_A) {
+void SendMatrixDataToProcess(int proc, const std::vector<int> &proc_rows, const MatrixCRS &matrix_A) {
   int num_rows = static_cast<int>(proc_rows.size());
   MPI_Send(&num_rows, 1, MPI_INT, proc, 0, MPI_COMM_WORLD);
 
@@ -212,16 +204,14 @@ void SendMatrixDataToProcess(int proc, const std::vector<int> &proc_rows,
   }
 }
 
-void ReceiveRowDataFromMaster(int num_rows,
-                              std::vector<int> &row_nnz,
-                              std::vector<int> &col_indices,
+void ReceiveRowDataFromMaster(int num_rows, std::vector<int> &row_nnz, std::vector<int> &col_indices,
                               std::vector<double> &values) {
   row_nnz.resize(static_cast<size_t>(num_rows));
   MPI_Recv(row_nnz.data(), num_rows, MPI_INT, 0, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
   int col_indices_size = 0;
   MPI_Recv(&col_indices_size, 1, MPI_INT, 0, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-  
+
   if (col_indices_size > 0) {
     col_indices.resize(static_cast<size_t>(col_indices_size));
     MPI_Recv(col_indices.data(), col_indices_size, MPI_INT, 0, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
@@ -229,40 +219,36 @@ void ReceiveRowDataFromMaster(int num_rows,
 
   int values_size = 0;
   MPI_Recv(&values_size, 1, MPI_INT, 0, 4, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-  
+
   if (values_size > 0) {
     values.resize(static_cast<size_t>(values_size));
     MPI_Recv(values.data(), values_size, MPI_DOUBLE, 0, 5, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
   }
 }
 
-void BuildLocalMatrixFromReceivedData(const std::vector<int> &row_nnz,
-                                      const std::vector<int> &col_indices,
-                                      const std::vector<double> &values,
-                                      MatrixCRS &local_A_rows) {
+void BuildLocalMatrixFromReceivedData(const std::vector<int> &row_nnz, const std::vector<int> &col_indices,
+                                      const std::vector<double> &values, MatrixCRS &local_A_rows) {
   local_A_rows.row_pointers.resize(static_cast<size_t>(local_A_rows.rows + 1));
   local_A_rows.row_pointers[0] = 0;
 
   size_t col_idx_pos = 0;
   size_t val_pos = 0;
-  
+
   for (int i = 0; i < local_A_rows.rows; ++i) {
     int nnz = row_nnz[static_cast<size_t>(i)];
-    
+
     for (int j = 0; j < nnz; ++j) {
       local_A_rows.col_indices.push_back(col_indices[col_idx_pos]);
       col_idx_pos++;
       local_A_rows.values.push_back(values[val_pos]);
       val_pos++;
     }
-    
+
     local_A_rows.row_pointers[i + 1] = local_A_rows.row_pointers[i] + nnz;
   }
 }
 
-void ReceiveMatrixDataFromMaster(int rank, int size,
-                                 MatrixCRS &local_A_rows,
-                                 std::vector<int> &local_rows,
+void ReceiveMatrixDataFromMaster(int rank, int size, MatrixCRS &local_A_rows, std::vector<int> &local_rows,
                                  int rows_A) {
   int num_rows = 0;
   MPI_Recv(&num_rows, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
@@ -274,15 +260,13 @@ void ReceiveMatrixDataFromMaster(int rank, int size,
     std::vector<double> values;
 
     local_A_rows.rows = num_rows;
-    
+
     ReceiveRowDataFromMaster(num_rows, row_nnz, col_indices, values);
     BuildLocalMatrixFromReceivedData(row_nnz, col_indices, values, local_A_rows);
   }
 }
 
-void ProcessLocalRowForInitialization(int global_row,
-                                      const MatrixCRS &matrix_A,
-                                      MatrixCRS &local_A_rows,
+void ProcessLocalRowForInitialization(int global_row, const MatrixCRS &matrix_A, MatrixCRS &local_A_rows,
                                       size_t local_index) {
   int row_start = matrix_A.row_pointers[static_cast<size_t>(global_row)];
   int row_end = matrix_A.row_pointers[static_cast<size_t>(global_row + 1)];
@@ -293,13 +277,10 @@ void ProcessLocalRowForInitialization(int global_row,
     local_A_rows.values.push_back(matrix_A.values[static_cast<size_t>(j)]);
   }
 
-  local_A_rows.row_pointers[local_index + 1] =
-      local_A_rows.row_pointers[local_index] + row_nnz_count;
+  local_A_rows.row_pointers[local_index + 1] = local_A_rows.row_pointers[local_index] + row_nnz_count;
 }
 
-void InitializeLocalRowsOnMaster(int rank, int size,
-                                 MatrixCRS &matrix_A,
-                                 MatrixCRS &local_A_rows,
+void InitializeLocalRowsOnMaster(int rank, int size, MatrixCRS &matrix_A, MatrixCRS &local_A_rows,
                                  std::vector<int> &local_rows) {
   local_rows = GetLocalRowsImpl(rank, size, matrix_A.rows);
   local_A_rows.rows = static_cast<int>(local_rows.size());
@@ -313,14 +294,12 @@ void InitializeLocalRowsOnMaster(int rank, int size,
   }
 }
 
-void GatherLocalRowCountsMaster(int rank,
-                                const MatrixCRS &local_result,
-                                const std::vector<int> &local_rows,
+void GatherLocalRowCountsMaster(int rank, const MatrixCRS &local_result, const std::vector<int> &local_rows,
                                 std::vector<int> &all_nnz_counts) {
   (void)rank;  // Явно помечаем неиспользуемый параметр
-  
+
   std::vector<int> local_nnz_counts;
-  
+
   for (size_t i = 0; i < local_rows.size(); ++i) {
     int row_nnz = local_result.row_pointers[i + 1] - local_result.row_pointers[i];
     local_nnz_counts.push_back(row_nnz);
@@ -332,44 +311,36 @@ void GatherLocalRowCountsMaster(int rank,
   }
 }
 
-void GatherLocalRowCountsWorker(int rank,
-                                const MatrixCRS &local_result,
-                                const std::vector<int> &local_rows) {
+void GatherLocalRowCountsWorker(int rank, const MatrixCRS &local_result, const std::vector<int> &local_rows) {
   (void)rank;  // Явно помечаем неиспользуемый параметр
-  
+
   std::vector<int> local_nnz_counts;
-  
+
   for (size_t i = 0; i < local_rows.size(); ++i) {
     int row_nnz = local_result.row_pointers[i + 1] - local_result.row_pointers[i];
     local_nnz_counts.push_back(row_nnz);
   }
 
   if (!local_nnz_counts.empty()) {
-    MPI_Send(local_nnz_counts.data(),
-             static_cast<int>(local_nnz_counts.size()),
-             MPI_INT, 0, 0, MPI_COMM_WORLD);
+    MPI_Send(local_nnz_counts.data(), static_cast<int>(local_nnz_counts.size()), MPI_INT, 0, 0, MPI_COMM_WORLD);
   } else {
     int dummy = 0;
     MPI_Send(&dummy, 0, MPI_INT, 0, 0, MPI_COMM_WORLD);
   }
 }
 
-void ReceiveRowCountsFromProcesses(int size,
-                                   int rows_A,
-                                   std::vector<int> &all_nnz_counts) {
+void ReceiveRowCountsFromProcesses(int size, int rows_A, std::vector<int> &all_nnz_counts) {
   for (int proc = 1; proc < size; ++proc) {
     std::vector<int> proc_rows = GetLocalRowsImpl(proc, size, rows_A);
     int proc_num_rows = static_cast<int>(proc_rows.size());
 
     if (proc_num_rows > 0) {
       std::vector<int> proc_nnz_counts(static_cast<size_t>(proc_num_rows));
-      MPI_Recv(proc_nnz_counts.data(), proc_num_rows, MPI_INT, proc, 0,
-               MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Recv(proc_nnz_counts.data(), proc_num_rows, MPI_INT, proc, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
       for (int i = 0; i < proc_num_rows; ++i) {
         int global_row = proc_rows[static_cast<size_t>(i)];
-        all_nnz_counts[static_cast<size_t>(global_row)] =
-            proc_nnz_counts[static_cast<size_t>(i)];
+        all_nnz_counts[static_cast<size_t>(global_row)] = proc_nnz_counts[static_cast<size_t>(i)];
       }
     } else {
       int dummy;
@@ -378,91 +349,80 @@ void ReceiveRowCountsFromProcesses(int size,
   }
 }
 
-void GatherRowCounts(int rank, int size,
-                     const MatrixCRS &local_result,
-                     MatrixCRS &result_matrix) {
+void GatherRowCounts(int rank, int size, const MatrixCRS &local_result, MatrixCRS &result_matrix) {
   std::vector<int> local_rows = GetLocalRowsImpl(rank, size, result_matrix.rows);
-  
+
   if (rank == 0) {
     std::vector<int> all_nnz_counts(static_cast<size_t>(result_matrix.rows), 0);
-    
+
     GatherLocalRowCountsMaster(rank, local_result, local_rows, all_nnz_counts);
     ReceiveRowCountsFromProcesses(size, result_matrix.rows, all_nnz_counts);
-    
+
     result_matrix.row_pointers[0] = 0;
     for (int i = 0; i < result_matrix.rows; ++i) {
-      result_matrix.row_pointers[i + 1] =
-          result_matrix.row_pointers[i] + all_nnz_counts[static_cast<size_t>(i)];
+      result_matrix.row_pointers[i + 1] = result_matrix.row_pointers[i] + all_nnz_counts[static_cast<size_t>(i)];
     }
-    
+
     for (int proc = 1; proc < size; ++proc) {
-      MPI_Send(result_matrix.row_pointers.data(),
-               result_matrix.rows + 1,
-               MPI_INT, proc, 1, MPI_COMM_WORLD);
+      MPI_Send(result_matrix.row_pointers.data(), result_matrix.rows + 1, MPI_INT, proc, 1, MPI_COMM_WORLD);
     }
   } else {
     GatherLocalRowCountsWorker(rank, local_result, local_rows);
-    
-    MPI_Recv(result_matrix.row_pointers.data(),
-             result_matrix.rows + 1,
-             MPI_INT, 0, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+    MPI_Recv(result_matrix.row_pointers.data(), result_matrix.rows + 1, MPI_INT, 0, 1, MPI_COMM_WORLD,
+             MPI_STATUS_IGNORE);
   }
 }
 
-void SendLocalRowDataToMaster(const MatrixCRS &local_result,
-                              const std::vector<int> &local_rows) {
+void SendLocalRowDataToMaster(const MatrixCRS &local_result, const std::vector<int> &local_rows) {
   for (size_t i = 0; i < local_rows.size(); ++i) {
     int global_row = local_rows[i];
     int local_start = local_result.row_pointers[i];
     int local_end = local_result.row_pointers[i + 1];
     int row_nnz = local_end - local_start;
-    
+
     if (row_nnz > 0) {
-      MPI_Send(&local_result.col_indices[static_cast<size_t>(local_start)],
-               row_nnz, MPI_INT, 0, global_row * 2, MPI_COMM_WORLD);
-      MPI_Send(&local_result.values[static_cast<size_t>(local_start)],
-               row_nnz, MPI_DOUBLE, 0, global_row * 2 + 1, MPI_COMM_WORLD);
+      MPI_Send(&local_result.col_indices[static_cast<size_t>(local_start)], row_nnz, MPI_INT, 0, global_row * 2,
+               MPI_COMM_WORLD);
+      MPI_Send(&local_result.values[static_cast<size_t>(local_start)], row_nnz, MPI_DOUBLE, 0, global_row * 2 + 1,
+               MPI_COMM_WORLD);
     }
   }
 }
 
-void ReceiveRowDataFromProcess(int proc, int size,
-                               MatrixCRS &result_matrix) {
+void ReceiveRowDataFromProcess(int proc, int size, MatrixCRS &result_matrix) {
   std::vector<int> proc_rows = GetLocalRowsImpl(proc, size, result_matrix.rows);
-  
+
   for (size_t i = 0; i < proc_rows.size(); ++i) {
     int global_row = proc_rows[i];
     int row_start = result_matrix.row_pointers[static_cast<size_t>(global_row)];
     int row_end = result_matrix.row_pointers[static_cast<size_t>(global_row + 1)];
     int row_nnz = row_end - row_start;
-    
+
     if (row_nnz > 0) {
-      MPI_Recv(&result_matrix.col_indices[static_cast<size_t>(row_start)],
-               row_nnz, MPI_INT, proc, global_row * 2,
+      MPI_Recv(&result_matrix.col_indices[static_cast<size_t>(row_start)], row_nnz, MPI_INT, proc, global_row * 2,
                MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      MPI_Recv(&result_matrix.values[static_cast<size_t>(row_start)],
-               row_nnz, MPI_DOUBLE, proc, global_row * 2 + 1,
+      MPI_Recv(&result_matrix.values[static_cast<size_t>(row_start)], row_nnz, MPI_DOUBLE, proc, global_row * 2 + 1,
                MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
   }
 }
 
-void GatherLocalRowDataOnMaster(const MatrixCRS &local_result,
-                                const std::vector<int> &local_rows,
+void GatherLocalRowDataOnMaster(const MatrixCRS &local_result, const std::vector<int> &local_rows,
                                 MatrixCRS &result_matrix) {
   for (size_t i = 0; i < local_rows.size(); ++i) {
     int global_row = local_rows[i];
     int local_start = local_result.row_pointers[i];
     int local_end = local_result.row_pointers[i + 1];
     int row_nnz = local_end - local_start;
-    
+
     if (row_nnz > 0) {
       int row_start = result_matrix.row_pointers[static_cast<size_t>(global_row)];
-      
+
       std::copy(local_result.col_indices.begin() + static_cast<size_t>(local_start),
                 local_result.col_indices.begin() + static_cast<size_t>(local_end),
                 result_matrix.col_indices.begin() + static_cast<size_t>(row_start));
-      
+
       std::copy(local_result.values.begin() + static_cast<size_t>(local_start),
                 local_result.values.begin() + static_cast<size_t>(local_end),
                 result_matrix.values.begin() + static_cast<size_t>(row_start));
@@ -470,14 +430,12 @@ void GatherLocalRowDataOnMaster(const MatrixCRS &local_result,
   }
 }
 
-void GatherRowData(int rank, int size,
-                   const MatrixCRS &local_result,
-                   MatrixCRS &result_matrix) {
+void GatherRowData(int rank, int size, const MatrixCRS &local_result, MatrixCRS &result_matrix) {
   std::vector<int> local_rows = GetLocalRowsImpl(rank, size, result_matrix.rows);
-  
+
   if (rank == 0) {
     GatherLocalRowDataOnMaster(local_result, local_rows, result_matrix);
-    
+
     for (int proc = 1; proc < size; ++proc) {
       ReceiveRowDataFromProcess(proc, size, result_matrix);
     }
@@ -550,7 +508,7 @@ bool YakimovIMultiplicationOfSparseMatricesMPI::PreProcessingImpl() {
 
   BroadcastMatrixInfo();
   MPI_Barrier(MPI_COMM_WORLD);
-  
+
   return success;
 }
 
@@ -612,12 +570,9 @@ void YakimovIMultiplicationOfSparseMatricesMPI::DistributeMatrixB() {
     MPI_Bcast(&total_nnz, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
     if (total_nnz > 0) {
-      MPI_Bcast(matrix_B_.row_pointers.data(),
-                matrix_B_.rows + 1, MPI_INT, 0, MPI_COMM_WORLD);
-      MPI_Bcast(matrix_B_.col_indices.data(),
-                total_nnz, MPI_INT, 0, MPI_COMM_WORLD);
-      MPI_Bcast(matrix_B_.values.data(),
-                total_nnz, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+      MPI_Bcast(matrix_B_.row_pointers.data(), matrix_B_.rows + 1, MPI_INT, 0, MPI_COMM_WORLD);
+      MPI_Bcast(matrix_B_.col_indices.data(), total_nnz, MPI_INT, 0, MPI_COMM_WORLD);
+      MPI_Bcast(matrix_B_.values.data(), total_nnz, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     }
 
     matrix_B_.rows = rows_B_;
@@ -633,12 +588,9 @@ void YakimovIMultiplicationOfSparseMatricesMPI::DistributeMatrixB() {
       matrix_B_.col_indices.resize(static_cast<size_t>(total_nnz));
       matrix_B_.values.resize(static_cast<size_t>(total_nnz));
 
-      MPI_Bcast(matrix_B_.row_pointers.data(),
-                matrix_B_.rows + 1, MPI_INT, 0, MPI_COMM_WORLD);
-      MPI_Bcast(matrix_B_.col_indices.data(),
-                total_nnz, MPI_INT, 0, MPI_COMM_WORLD);
-      MPI_Bcast(matrix_B_.values.data(),
-                total_nnz, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+      MPI_Bcast(matrix_B_.row_pointers.data(), matrix_B_.rows + 1, MPI_INT, 0, MPI_COMM_WORLD);
+      MPI_Bcast(matrix_B_.col_indices.data(), total_nnz, MPI_INT, 0, MPI_COMM_WORLD);
+      MPI_Bcast(matrix_B_.values.data(), total_nnz, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     }
   }
 }
@@ -658,15 +610,15 @@ void YakimovIMultiplicationOfSparseMatricesMPI::GatherResults() {
     result_matrix_.rows = rows_A_;
     result_matrix_.cols = cols_B_;
   }
-  
+
   int dims[2] = {rows_A_, cols_B_};
   MPI_Bcast(dims, 2, MPI_INT, 0, MPI_COMM_WORLD);
-  
+
   if (rank != 0) {
     result_matrix_.rows = dims[0];
     result_matrix_.cols = dims[1];
   }
-  
+
   result_matrix_.row_pointers.resize(static_cast<size_t>(result_matrix_.rows + 1));
   GatherRowCounts(rank, size, local_result_, result_matrix_);
 

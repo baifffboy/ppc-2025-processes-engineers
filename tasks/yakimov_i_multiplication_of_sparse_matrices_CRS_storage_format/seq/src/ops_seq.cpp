@@ -75,8 +75,7 @@ bool ReadMatrixFromFileImpl(const std::string &filename, MatrixCRS &matrix) {
   return success;
 }
 
-void ProcessRowMultiplication(const MatrixCRS &A, const MatrixCRS &B, 
-                              int row_index, std::vector<double> &row_values) {
+void ProcessRowMultiplication(const MatrixCRS &A, const MatrixCRS &B, int row_index, std::vector<double> &row_values) {
   std::fill(row_values.begin(), row_values.end(), 0.0);
 
   int row_start_A = A.row_pointers[static_cast<size_t>(row_index)];
@@ -97,8 +96,7 @@ void ProcessRowMultiplication(const MatrixCRS &A, const MatrixCRS &B,
   }
 }
 
-void CollectRowResult(const std::vector<double> &row_values, 
-                      MatrixCRS &result, int row_index) {
+void CollectRowResult(const std::vector<double> &row_values, MatrixCRS &result, int row_index) {
   for (size_t j = 0; j < row_values.size(); ++j) {
     if (row_values[j] != 0.0) {
       result.values.push_back(row_values[j]);
@@ -106,8 +104,7 @@ void CollectRowResult(const std::vector<double> &row_values,
     }
   }
 
-  result.row_pointers[static_cast<size_t>(row_index + 1)] = 
-      static_cast<int>(result.values.size());
+  result.row_pointers[static_cast<size_t>(row_index + 1)] = static_cast<int>(result.values.size());
 }
 
 MatrixCRS MultiplyMatricesImpl(const MatrixCRS &A, const MatrixCRS &B) {
@@ -140,11 +137,7 @@ double SumMatrixElementsImpl(const MatrixCRS &matrix) {
 }  // namespace
 
 YakimovIMultiplicationOfSparseMatricesSEQ::YakimovIMultiplicationOfSparseMatricesSEQ(const InType &in)
-    : matrix_A_(),
-      matrix_B_(),
-      result_matrix_(),
-      matrix_A_filename_(""),
-      matrix_B_filename_("") {
+    : matrix_A_(), matrix_B_(), result_matrix_(), matrix_A_filename_(""), matrix_B_filename_("") {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
   GetOutput() = 0.0;
