@@ -11,7 +11,8 @@
 
 namespace yakimov_i_linear_virtual_topology {
 
-YakimovILinearVirtualTopologyMPI::YakimovILinearVirtualTopologyMPI(const InType &in) : num_processes_(0) {
+YakimovILinearVirtualTopologyMPI::YakimovILinearVirtualTopologyMPI(const InType &in) 
+    : num_processes_(0), rank_(0), size_(0) {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
   GetOutput() = -1;
@@ -36,13 +37,13 @@ bool YakimovILinearVirtualTopologyMPI::ReadOperationsFromFile(const std::string 
     return false;
   }
 
-  int src = 0;
-  int dst = 0;
-  int data = 0;
-  while (file >> src >> dst >> data) {
-    operations_.push_back(src);
-    operations_.push_back(dst);
-    operations_.push_back(data);
+  int src_val = 0;
+  int dst_val = 0;
+  int data_val = 0;
+  while (file >> src_val >> dst_val >> data_val) {
+    operations_.push_back(src_val);
+    operations_.push_back(dst_val);
+    operations_.push_back(data_val);
   }
 
   file.close();
@@ -97,11 +98,11 @@ int YakimovILinearVirtualTopologyMPI::ProcessAllOperations() {
   int local_total = 0;
 
   for (size_t i = 0; i < operations_.size(); i += 3) {
-    int src = operations_[i];
-    int dst = operations_[i + 1];
-    int data = operations_[i + 2];
+    int src_val = operations_[i];
+    int dst_val = operations_[i + 1];
+    int data_val = operations_[i + 2];
 
-    local_total += ProcessSingleOperation(src, dst, data);
+    local_total += ProcessSingleOperation(src_val, dst_val, data_val);
     MPI_Barrier(MPI_COMM_WORLD);
   }
 
