@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <array>
+#include <cstddef>
 
 #include "util/include/perf_test_util.hpp"
 #include "yakimov_i_linear_virtual_topology/common/include/common.hpp"

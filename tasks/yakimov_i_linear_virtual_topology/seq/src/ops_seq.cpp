@@ -2,14 +2,16 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <string>
 #include <vector>
 
 namespace yakimov_i_linear_virtual_topology {
 
-YakimovILinearVirtualTopologySEQ::YakimovILinearVirtualTopologySEQ(const InType &in) {
+YakimovILinearVirtualTopologySEQ::YakimovILinearVirtualTopologySEQ(const InType &in) : num_processes_(0) {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
   GetOutput() = -1;
@@ -26,10 +28,7 @@ bool YakimovILinearVirtualTopologySEQ::ValidationImpl() {
 }
 
 bool YakimovILinearVirtualTopologySEQ::PreProcessingImpl() {
-  if (!ReadOperationsFromFile(data_filename_)) {
-    return false;
-  }
-  return true;
+  return ReadOperationsFromFile(data_filename_);
 }
 
 bool YakimovILinearVirtualTopologySEQ::ReadOperationsFromFile(const std::string &filename) {
@@ -38,7 +37,9 @@ bool YakimovILinearVirtualTopologySEQ::ReadOperationsFromFile(const std::string 
     return false;
   }
 
-  int src, dst, data;
+  int src = 0;
+  int dst = 0;
+  int data = 0;
   while (file >> src >> dst >> data) {
     operations_.push_back(src);
     operations_.push_back(dst);
@@ -61,48 +62,79 @@ bool YakimovILinearVirtualTopologySEQ::RunImpl() {
   std::vector<int> process_data(num_processes_, 0);
   int total_received = 0;
 
+  ProcessAllOperations(process_data, total_received);
+
+  GetOutput() = std::abs(total_received);
+  return true;
+}
+
+void YakimovILinearVirtualTopologySEQ::ProcessAllOperations(std::vector<int> &process_data, int &total_received) {
   for (size_t i = 0; i < operations_.size(); i += 3) {
     int src = operations_[i];
     int dst = operations_[i + 1];
     int data = operations_[i + 2];
 
-    volatile int delay = 0;
-    for (int i = 0; i < 1e6; i++) {  // цикл предназначен для замедления seq версии так виртуальная линейная топология
-                                     // на ней лишь "эмуляция" внутри вектора, а не реальный обмен данными между
-                                     // процессами (необходимо для минимального порога прохождения тестов)
-      for (int j = 1; j < 10; j++) {
-        delay += (i % j);
-      }
-    }
+    ApplyArtificialDelay();
 
-    if (src >= num_processes_ || dst >= num_processes_ || src < 0 || dst < 0) {
+    if (!IsValidProcessId(src) || !IsValidProcessId(dst)) {
       continue;
     }
 
-    if (src == dst) {
-      process_data[src] += data;
-      total_received += data;
-      continue;
-    }
-    int direction = (dst > src) ? 1 : -1;
-    int current_process = src;
-    int current_data = data;
-    while (current_process != dst) {
-      int next_process = current_process + direction;
-      if (next_process < 0 || next_process >= num_processes_) {
-        break;
-      }
-      if (next_process == dst) {
-        process_data[dst] += current_data;
-        total_received += current_data;
-      }
-      current_process = next_process;
+    ProcessSingleOperation(src, dst, data, process_data, total_received);
+  }
+}
+
+void YakimovILinearVirtualTopologySEQ::ApplyArtificialDelay() {
+  volatile int delay = 0;
+  for (int i = 0; i < 1e6; i++) {
+    for (int j = 1; j < 10; j++) {
+      delay += (i % j);
     }
   }
+  (void)delay;  // чтобы избежать предупреждения о неиспользуемой переменной
+}
 
-  GetOutput() = std::abs(total_received);
+bool YakimovILinearVirtualTopologySEQ::IsValidProcessId(int process_id) const {
+  return process_id >= 0 && process_id < num_processes_;
+}
 
-  return true;
+void YakimovILinearVirtualTopologySEQ::ProcessSingleOperation(int src, int dst, int data,
+                                                              std::vector<int> &process_data, int &total_received) {
+  if (src == dst) {
+    HandleSameProcessTransfer(src, data, process_data, total_received);
+    return;
+  }
+
+  HandleDifferentProcessTransfer(src, dst, data, process_data, total_received);
+}
+
+void YakimovILinearVirtualTopologySEQ::HandleSameProcessTransfer(int process_id, int data,
+                                                                 std::vector<int> &process_data, int &total_received) {
+  process_data[process_id] += data;
+  total_received += data;
+}
+
+void YakimovILinearVirtualTopologySEQ::HandleDifferentProcessTransfer(int src, int dst, int data,
+                                                                      std::vector<int> &process_data,
+                                                                      int &total_received) {
+  int direction = (dst > src) ? 1 : -1;
+  int current_process = src;
+  int current_data = data;
+
+  while (current_process != dst) {
+    int next_process = current_process + direction;
+
+    if (!IsValidProcessId(next_process)) {
+      break;
+    }
+
+    if (next_process == dst) {
+      process_data[dst] += current_data;
+      total_received += current_data;
+    }
+
+    current_process = next_process;
+  }
 }
 
 bool YakimovILinearVirtualTopologySEQ::PostProcessingImpl() {

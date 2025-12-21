@@ -23,6 +23,19 @@ class YakimovILinearVirtualTopologyMPI : public BaseTask {
 
   bool ReadOperationsFromFile(const std::string &filename);
   void BroadcastOperations();
+  void InitializeMPI();
+  int ProcessAllOperations();
+  int ProcessSingleOperation(int src, int dst, int data);
+  bool IsValidOperation(int src, int dst) const;
+  int ProcessSameProcessOperation(int process_id, int data);
+  int ProcessDifferentProcessOperation(int src, int dst, int data);
+  int CalculateDirection(int src, int dst) const;
+  int ProcessDataTransfer(int src, int dst, int data, int direction);
+  void SendDataToNextProcess(int data, int direction);
+  int ReceiveDataFromPreviousProcess(int direction);
+  int ForwardDataBetweenProcesses(int direction);
+  int CalculateGlobalTotal(int local_total);
+  void SetOutput(int global_total);
 
   std::vector<int> operations_;
   int num_processes_;
