@@ -21,11 +21,13 @@ class YakimovIMultiplicationOfSparseMatricesMPI : public BaseTask {
   bool PreProcessingImpl() override;
   bool RunImpl() override;
   bool PostProcessingImpl() override;
+  
   bool ReadMatrixFromFile(const std::string &filename, MatrixCRS &matrix);
   void BroadcastMatrixInfo();
   void DistributeMatrixA();
   void DistributeMatrixB();
   void GatherResults();
+  
   std::vector<int> GetLocalRows(int rank, int size, int total_rows);
   MatrixCRS MultiplyLocalRows(const MatrixCRS &local_A_rows, const MatrixCRS &B);
 
@@ -34,9 +36,11 @@ class YakimovIMultiplicationOfSparseMatricesMPI : public BaseTask {
   MatrixCRS result_matrix_;
   MatrixCRS local_A_rows_;
   MatrixCRS local_result_;
+  
   std::string matrix_A_filename_;
   std::string matrix_B_filename_;
   std::vector<int> local_rows_;
+  
   int rows_A_;
   int cols_A_;
   int rows_B_;
