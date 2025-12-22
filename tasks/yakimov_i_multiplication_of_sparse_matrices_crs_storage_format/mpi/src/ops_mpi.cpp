@@ -116,6 +116,11 @@ MatrixCRS MultiplyMatricesImpl(const MatrixCRS &a, const MatrixCRS &b) {
   result.rows = a.rows;
   result.cols = b.cols;
   result.row_pointers.resize(static_cast<size_t>(result.rows) + 1);
+
+  if (result.row_pointers.empty()) {
+    return result;
+  }
+
   result.row_pointers[0] = 0;
 
   std::vector<double> row_values(static_cast<size_t>(result.cols), 0.0);
