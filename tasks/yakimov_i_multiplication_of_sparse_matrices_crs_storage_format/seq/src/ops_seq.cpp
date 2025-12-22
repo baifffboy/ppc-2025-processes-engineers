@@ -46,7 +46,7 @@ bool ReadRowData(std::ifstream &file, MatrixCRS &matrix, int row_index) {
     matrix.values.push_back(value);
   }
 
-  matrix.row_pointers[static_cast<size_t>(row_index + 1)] =
+  matrix.row_pointers[static_cast<size_t>(row_index) + 1] =
       matrix.row_pointers[static_cast<size_t>(row_index)] + nonzeros;
 
   return true;
@@ -64,7 +64,7 @@ bool ReadMatrixFromFileImpl(const std::string &filename, MatrixCRS &matrix) {
     return false;
   }
 
-  matrix.row_pointers.resize(static_cast<size_t>(matrix.rows + 1));
+  matrix.row_pointers.resize(static_cast<size_t>(matrix.rows) + 1);
   matrix.row_pointers[0] = 0;
 
   for (int i = 0; i < matrix.rows; ++i) {
@@ -78,12 +78,12 @@ bool ReadMatrixFromFileImpl(const std::string &filename, MatrixCRS &matrix) {
 void ProcessRowMultiplication(const MatrixCRS &a, const MatrixCRS &b, int row_index, std::vector<double> &row_values) {
   std::ranges::fill(row_values, 0.0);
   int row_start_a = a.row_pointers[static_cast<std::size_t>(row_index)];
-  int row_end_a = a.row_pointers[static_cast<std::size_t>(row_index + 1)];
+  int row_end_a = a.row_pointers[static_cast<std::size_t>(row_index) + 1];
   for (int k = row_start_a; k < row_end_a; ++k) {
     int col_a = a.col_indices[static_cast<std::size_t>(k)];
     double val_a = a.values[static_cast<std::size_t>(k)];
     int row_start_b = b.row_pointers[static_cast<std::size_t>(col_a)];
-    int row_end_b = b.row_pointers[static_cast<std::size_t>(col_a + 1)];
+    int row_end_b = b.row_pointers[static_cast<std::size_t>(col_a) + 1];
     for (int idx = row_start_b; idx < row_end_b; ++idx) {
       int col_b = b.col_indices[static_cast<std::size_t>(idx)];
       double val_b = b.values[static_cast<std::size_t>(idx)];
@@ -100,14 +100,14 @@ void CollectRowResult(const std::vector<double> &row_values, MatrixCRS &result, 
     }
   }
 
-  result.row_pointers[static_cast<size_t>(row_index + 1)] = static_cast<int>(result.values.size());
+  result.row_pointers[static_cast<size_t>(row_index) + 1] = static_cast<int>(result.values.size());
 }
 
 MatrixCRS MultiplyMatricesImpl(const MatrixCRS &A, const MatrixCRS &B) {
   MatrixCRS result;
   result.rows = A.rows;
   result.cols = B.cols;
-  result.row_pointers.resize(static_cast<size_t>(result.rows + 1));
+  result.row_pointers.resize(static_cast<size_t>(result.rows) + 1);
   result.row_pointers[0] = 0;
 
   std::vector<double> row_values(static_cast<size_t>(result.cols), 0.0);

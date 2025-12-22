@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 #include "task/include/task.hpp"
 #include "yakimov_i_multiplication_of_sparse_matrices_crs_storage_format/common/include/common.hpp"
@@ -20,24 +21,20 @@ class YakimovIMultiplicationOfSparseMatricesMPI : public BaseTask {
   bool RunImpl() override;
   bool PostProcessingImpl() override;
 
-  bool ReadMatrixFromFile(const std::string &filename, MatrixCRS &matrix);
   void BroadcastMatrixInfo();
   void DistributeMatrixA();
   void DistributeMatrixB();
   void GatherResults();
 
-  std::vector<int> GetLocalRows(int rank, int size, int total_rows);
-  MatrixCRS MultiplyLocalRows(const MatrixCRS &local_a_rows, const MatrixCRS &b);
+  MatrixCRS matrix_A_;
+  MatrixCRS matrix_B_;
+  MatrixCRS result_matrix_;
+  MatrixCRS local_a_rows_;
+  MatrixCRS local_result_;
 
-  MatrixCRS matrix_A_{};
-  MatrixCRS matrix_B_{};
-  MatrixCRS result_matrix_{};
-  MatrixCRS local_a_rows_{};
-  MatrixCRS local_result_{};
-
-  std::string matrix_A_filename_{};
-  std::string matrix_B_filename_{};
-  std::vector<int> local_rows_{};
+  std::string matrix_A_filename_;
+  std::string matrix_B_filename_;
+  std::vector<int> local_rows_;
 
   int rows_A_ = 0;
   int cols_A_ = 0;

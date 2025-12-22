@@ -20,11 +20,11 @@ class YakimovIMultiplicationOfSparseMatricesSEQ : public BaseTask {
   bool RunImpl() override;
   bool PostProcessingImpl() override;
 
-  MatrixCRS matrix_A_{};
-  MatrixCRS matrix_B_{};
-  MatrixCRS result_matrix_{};
-  std::string matrix_A_filename_{};
-  std::string matrix_B_filename_{};
+  MatrixCRS matrix_A_;
+  MatrixCRS matrix_B_;
+  MatrixCRS result_matrix_;
+  std::string matrix_A_filename_;
+  std::string matrix_B_filename_;
 };
 
 }  // namespace yakimov_i_multiplication_of_sparse_matrices_crs_storage_format
