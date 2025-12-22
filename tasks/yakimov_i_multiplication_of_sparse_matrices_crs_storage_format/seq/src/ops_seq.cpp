@@ -103,17 +103,17 @@ void CollectRowResult(const std::vector<double> &row_values, MatrixCRS &result, 
   result.row_pointers[static_cast<size_t>(row_index) + 1] = static_cast<int>(result.values.size());
 }
 
-MatrixCRS MultiplyMatricesImpl(const MatrixCRS &A, const MatrixCRS &B) {
+MatrixCRS MultiplyMatricesImpl(const MatrixCRS &a, const MatrixCRS &b) {
   MatrixCRS result;
-  result.rows = A.rows;
-  result.cols = B.cols;
+  result.rows = a.rows;
+  result.cols = b.cols;
   result.row_pointers.resize(static_cast<size_t>(result.rows) + 1);
   result.row_pointers[0] = 0;
 
   std::vector<double> row_values(static_cast<size_t>(result.cols), 0.0);
 
-  for (int i = 0; i < A.rows; ++i) {
-    ProcessRowMultiplication(A, B, i, row_values);
+  for (int i = 0; i < a.rows; ++i) {
+    ProcessRowMultiplication(a, b, i, row_values);
     CollectRowResult(row_values, result, i);
   }
 
@@ -123,8 +123,8 @@ MatrixCRS MultiplyMatricesImpl(const MatrixCRS &A, const MatrixCRS &B) {
 double SumMatrixElementsImpl(const MatrixCRS &matrix) {
   double sum = 0.0;
 
-  for (size_t i = 0; i < matrix.values.size(); ++i) {
-    sum += matrix.values[i];
+  for (double value : matrix.values) {
+    sum += value;
   }
 
   return sum;

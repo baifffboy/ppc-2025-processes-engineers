@@ -83,19 +83,19 @@ void ProcessRowMultiplication(const MatrixCRS &a, const MatrixCRS &b, int row_in
   std::ranges::fill(row_values, 0.0);
 
   int row_start_a = a.row_pointers[static_cast<size_t>(row_index)];
-  int row_end_A = a.row_pointers[static_cast<size_t>(row_index) + 1];
+  int row_end_a = a.row_pointers[static_cast<size_t>(row_index) + 1];
 
-  for (int k = row_start_a; k < row_end_A; ++k) {
-    int col_A = a.col_indices[static_cast<size_t>(k)];
-    double val_A = a.values[static_cast<size_t>(k)];
+  for (int k = row_start_a; k < row_end_a; ++k) {
+    int col_a = a.col_indices[static_cast<size_t>(k)];
+    double val_a = a.values[static_cast<size_t>(k)];
 
-    int row_start_B = b.row_pointers[static_cast<size_t>(col_A)];
-    int row_end_B = b.row_pointers[static_cast<size_t>(col_A) + 1];
+    int row_start_b = b.row_pointers[static_cast<size_t>(col_a)];
+    int row_end_b = b.row_pointers[static_cast<size_t>(col_a) + 1];
 
-    for (int idx = row_start_B; idx < row_end_B; ++idx) {
-      int col_B = b.col_indices[static_cast<size_t>(idx)];
-      double val_B = b.values[static_cast<size_t>(idx)];
-      row_values[static_cast<size_t>(col_B)] += val_A * val_B;
+    for (int idx = row_start_b; idx < row_end_b; ++idx) {
+      int col_b = b.col_indices[static_cast<size_t>(idx)];
+      double val_b = b.values[static_cast<size_t>(idx)];
+      row_values[static_cast<size_t>(col_b)] += val_a * val_b;
     }
   }
 }
@@ -111,17 +111,17 @@ void CollectRowResult(const std::vector<double> &row_values, MatrixCRS &result, 
   result.row_pointers[static_cast<size_t>(row_index) + 1] = static_cast<int>(result.values.size());
 }
 
-MatrixCRS MultiplyMatricesImpl(const MatrixCRS &A, const MatrixCRS &B) {
+MatrixCRS MultiplyMatricesImpl(const MatrixCRS &a, const MatrixCRS &b) {
   MatrixCRS result;
-  result.rows = A.rows;
-  result.cols = B.cols;
+  result.rows = a.rows;
+  result.cols = b.cols;
   result.row_pointers.resize(static_cast<size_t>(result.rows) + 1);
   result.row_pointers[0] = 0;
 
   std::vector<double> row_values(static_cast<size_t>(result.cols), 0.0);
 
-  for (int i = 0; i < A.rows; ++i) {
-    ProcessRowMultiplication(A, B, i, row_values);
+  for (int i = 0; i < a.rows; ++i) {
+    ProcessRowMultiplication(a, b, i, row_values);
     CollectRowResult(row_values, result, i);
   }
 
@@ -153,20 +153,20 @@ std::vector<int> GetLocalRowsImpl(int rank, int size, int total_rows) {
   return local_rows;
 }
 
-void PrepareRowDataForSending(const std::vector<int> &proc_rows, const MatrixCRS &matrix_A, std::vector<int> &row_nnz,
+void PrepareRowDataForSending(const std::vector<int> &proc_rows, const MatrixCRS &matrix_a, std::vector<int> &row_nnz,
                               std::vector<int> &col_indices, std::vector<double> &values) {
   for (int row_idx : proc_rows) {
-    int row_start = matrix_A.row_pointers[static_cast<size_t>(row_idx)];
-    int row_end = matrix_A.row_pointers[static_cast<size_t>(row_idx) + 1];
+    int row_start = matrix_a.row_pointers[static_cast<size_t>(row_idx)];
+    int row_end = matrix_a.row_pointers[static_cast<size_t>(row_idx) + 1];
     int row_nnz_count = row_end - row_start;
     row_nnz.push_back(row_nnz_count);
 
     for (int i = row_start; i < row_end; ++i) {
-      col_indices.push_back(matrix_A.col_indices[static_cast<size_t>(i)]);
+      col_indices.push_back(matrix_a.col_indices[static_cast<size_t>(i)]);
     }
 
     for (int i = row_start; i < row_end; ++i) {
-      values.push_back(matrix_A.values[static_cast<size_t>(i)]);
+      values.push_back(matrix_a.values[static_cast<size_t>(i)]);
     }
   }
 }
@@ -191,7 +191,7 @@ void SendRowDataToProcess(int proc, const std::vector<int> &row_nnz, const std::
   }
 }
 
-void SendMatrixDataToProcess(int proc, const std::vector<int> &proc_rows, const MatrixCRS &matrix_A) {
+void SendMatrixDataToProcess(int proc, const std::vector<int> &proc_rows, const MatrixCRS &matrix_a) {
   int num_rows = static_cast<int>(proc_rows.size());
   MPI_Send(&num_rows, 1, MPI_INT, proc, 0, MPI_COMM_WORLD);
 
@@ -200,7 +200,7 @@ void SendMatrixDataToProcess(int proc, const std::vector<int> &proc_rows, const 
     std::vector<int> col_indices;
     std::vector<double> values;
 
-    PrepareRowDataForSending(proc_rows, matrix_A, row_nnz, col_indices, values);
+    PrepareRowDataForSending(proc_rows, matrix_a, row_nnz, col_indices, values);
     SendRowDataToProcess(proc, row_nnz, col_indices, values);
   }
 }
@@ -250,10 +250,10 @@ void BuildLocalMatrixFromReceivedData(const std::vector<int> &row_nnz, const std
 }
 
 void ReceiveMatrixDataFromMaster(int rank, int size, MatrixCRS &local_a_rows, std::vector<int> &local_rows,
-                                 int rows_A) {
+                                 int rows_a) {
   int num_rows = 0;
   MPI_Recv(&num_rows, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-  local_rows = GetLocalRowsImpl(rank, size, rows_A);
+  local_rows = GetLocalRowsImpl(rank, size, rows_a);
 
   if (num_rows > 0) {
     std::vector<int> row_nnz;
@@ -267,38 +267,36 @@ void ReceiveMatrixDataFromMaster(int rank, int size, MatrixCRS &local_a_rows, st
   }
 }
 
-void ProcessLocalRowForInitialization(int global_row, const MatrixCRS &matrix_A, MatrixCRS &local_a_rows,
+void ProcessLocalRowForInitialization(int global_row, const MatrixCRS &matrix_a, MatrixCRS &local_a_rows,
                                       size_t local_index) {
-  int row_start = matrix_A.row_pointers[static_cast<size_t>(global_row)];
-  int row_end = matrix_A.row_pointers[static_cast<size_t>(global_row) + 1];
+  int row_start = matrix_a.row_pointers[static_cast<size_t>(global_row)];
+  int row_end = matrix_a.row_pointers[static_cast<size_t>(global_row) + 1];
   int row_nnz_count = row_end - row_start;
 
   for (int j = row_start; j < row_end; ++j) {
-    local_a_rows.col_indices.push_back(matrix_A.col_indices[static_cast<size_t>(j)]);
-    local_a_rows.values.push_back(matrix_A.values[static_cast<size_t>(j)]);
+    local_a_rows.col_indices.push_back(matrix_a.col_indices[static_cast<size_t>(j)]);
+    local_a_rows.values.push_back(matrix_a.values[static_cast<size_t>(j)]);
   }
 
   local_a_rows.row_pointers[local_index + 1] = local_a_rows.row_pointers[local_index] + row_nnz_count;
 }
 
-void InitializeLocalRowsOnMaster(int rank, int size, MatrixCRS &matrix_A, MatrixCRS &local_a_rows,
+void InitializeLocalRowsOnMaster(int rank, int size, MatrixCRS &matrix_a, MatrixCRS &local_a_rows,
                                  std::vector<int> &local_rows) {
-  local_rows = GetLocalRowsImpl(rank, size, matrix_A.rows);
+  local_rows = GetLocalRowsImpl(rank, size, matrix_a.rows);
   local_a_rows.rows = static_cast<int>(local_rows.size());
-  local_a_rows.cols = matrix_A.cols;
+  local_a_rows.cols = matrix_a.cols;
   local_a_rows.row_pointers.resize(static_cast<size_t>(local_a_rows.rows) + 1);
   local_a_rows.row_pointers[0] = 0;
 
   for (size_t i = 0; i < local_rows.size(); ++i) {
     int global_row = local_rows[i];
-    ProcessLocalRowForInitialization(global_row, matrix_A, local_a_rows, i);
+    ProcessLocalRowForInitialization(global_row, matrix_a, local_a_rows, i);
   }
 }
 
-void GatherLocalRowCountsMaster(int rank, const MatrixCRS &local_result, const std::vector<int> &local_rows,
+void GatherLocalRowCountsMaster(const MatrixCRS &local_result, const std::vector<int> &local_rows,
                                 std::vector<int> &all_nnz_counts) {
-  (void)rank;  // Явно помечаем неиспользуемый параметр
-
   std::vector<int> local_nnz_counts;
 
   for (size_t i = 0; i < local_rows.size(); ++i) {
@@ -312,9 +310,7 @@ void GatherLocalRowCountsMaster(int rank, const MatrixCRS &local_result, const s
   }
 }
 
-void GatherLocalRowCountsWorker(int rank, const MatrixCRS &local_result, const std::vector<int> &local_rows) {
-  (void)rank;  // Явно помечаем неиспользуемый параметр
-
+void GatherLocalRowCountsWorker(const MatrixCRS &local_result, const std::vector<int> &local_rows) {
   std::vector<int> local_nnz_counts;
 
   for (size_t i = 0; i < local_rows.size(); ++i) {
@@ -330,9 +326,9 @@ void GatherLocalRowCountsWorker(int rank, const MatrixCRS &local_result, const s
   }
 }
 
-void ReceiveRowCountsFromProcesses(int size, int rows_A, std::vector<int> &all_nnz_counts) {
+void ReceiveRowCountsFromProcesses(int size, int rows_a, std::vector<int> &all_nnz_counts) {
   for (int proc = 1; proc < size; ++proc) {
-    std::vector<int> proc_rows = GetLocalRowsImpl(proc, size, rows_A);
+    std::vector<int> proc_rows = GetLocalRowsImpl(proc, size, rows_a);
     int proc_num_rows = static_cast<int>(proc_rows.size());
 
     if (proc_num_rows > 0) {
@@ -356,7 +352,7 @@ void GatherRowCounts(int rank, int size, const MatrixCRS &local_result, MatrixCR
   if (rank == 0) {
     std::vector<int> all_nnz_counts(static_cast<size_t>(result_matrix.rows), 0);
 
-    GatherLocalRowCountsMaster(rank, local_result, local_rows, all_nnz_counts);
+    GatherLocalRowCountsMaster(local_result, local_rows, all_nnz_counts);
     ReceiveRowCountsFromProcesses(size, result_matrix.rows, all_nnz_counts);
 
     result_matrix.row_pointers[0] = 0;
@@ -368,7 +364,7 @@ void GatherRowCounts(int rank, int size, const MatrixCRS &local_result, MatrixCR
       MPI_Send(result_matrix.row_pointers.data(), result_matrix.rows + 1, MPI_INT, proc, 1, MPI_COMM_WORLD);
     }
   } else {
-    GatherLocalRowCountsWorker(rank, local_result, local_rows);
+    GatherLocalRowCountsWorker(local_result, local_rows);
 
     MPI_Recv(result_matrix.row_pointers.data(), result_matrix.rows + 1, MPI_INT, 0, 1, MPI_COMM_WORLD,
              MPI_STATUS_IGNORE);
@@ -419,13 +415,13 @@ void GatherLocalRowDataOnMaster(const MatrixCRS &local_result, const std::vector
     if (row_nnz > 0) {
       int row_start = result_matrix.row_pointers[static_cast<size_t>(global_row)];
 
-      std::copy(local_result.col_indices.begin() + static_cast<size_t>(local_start),
-                local_result.col_indices.begin() + static_cast<size_t>(local_end),
-                result_matrix.col_indices.begin() + static_cast<size_t>(row_start));
+      std::copy(local_result.col_indices.begin() + static_cast<std::vector<int>::difference_type>(local_start),
+                local_result.col_indices.begin() + static_cast<std::vector<int>::difference_type>(local_end),
+                result_matrix.col_indices.begin() + static_cast<std::vector<int>::difference_type>(row_start));
 
-      std::copy(local_result.values.begin() + static_cast<size_t>(local_start),
-                local_result.values.begin() + static_cast<size_t>(local_end),
-                result_matrix.values.begin() + static_cast<size_t>(row_start));
+      std::copy(local_result.values.begin() + static_cast<std::vector<double>::difference_type>(local_start),
+                local_result.values.begin() + static_cast<std::vector<double>::difference_type>(local_end),
+                result_matrix.values.begin() + static_cast<std::vector<double>::difference_type>(row_start));
     }
   }
 }
