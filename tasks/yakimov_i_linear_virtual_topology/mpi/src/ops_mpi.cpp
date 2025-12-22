@@ -2,7 +2,6 @@
 
 #include <mpi.h>
 
-#include <algorithm>
 #include <cstddef>
 #include <filesystem>
 #include <fstream>
@@ -145,7 +144,7 @@ bool YakimovILinearVirtualTopologyMPI::RunImpl() {
 
   MPI_Bcast(data_.data(), data_size, MPI_INT, 0, MPI_COMM_WORLD);
 
-  MPI_Comm linear_comm;
+  MPI_Comm linear_comm = MPI_COMM_NULL;
   CreateLinearTopology(linear_comm);
   ProcessDataInTopology(rank, linear_comm);
   ExchangeDataInTopology(linear_comm);

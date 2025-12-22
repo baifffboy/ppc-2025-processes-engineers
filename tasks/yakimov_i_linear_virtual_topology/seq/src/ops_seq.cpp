@@ -6,6 +6,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <vector>
 
 #include "yakimov_i_linear_virtual_topology/common/include/common.hpp"
 
@@ -53,7 +54,7 @@ bool YakimovILinearVirtualTopologySEQ::PreProcessingImpl() {
   }
 
   process_values_.resize(static_cast<size_t>(kMaxProcesses));
-  std::fill(process_values_.begin(), process_values_.end(), 0);
+  std::ranges::fill(process_values_, 0);
 
   total_sum_ = 0;
 

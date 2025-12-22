@@ -2,7 +2,6 @@
 
 #include <mpi.h>
 
-#include <cstddef>
 #include <string>
 #include <vector>
 
@@ -24,11 +23,11 @@ class YakimovILinearVirtualTopologyMPI : public BaseTask {
   bool RunImpl() override;
   bool PostProcessingImpl() override;
   bool ReadDataFromFile(const std::string &filename);
-  void CreateLinearTopology(MPI_Comm &linear_comm);
+  static void CreateLinearTopology(MPI_Comm &linear_comm);
   void ProcessDataInTopology(int rank, MPI_Comm &linear_comm);
   void ExchangeDataInTopology(MPI_Comm &linear_comm);
 
-  std::vector<int> data_{};
+  std::vector<int> data_;
   int local_sum_{0};
   int total_sum_{0};
   std::string data_filename_;
