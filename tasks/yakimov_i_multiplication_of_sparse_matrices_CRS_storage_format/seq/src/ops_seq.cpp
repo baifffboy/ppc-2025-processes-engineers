@@ -1,4 +1,4 @@
-#include "yakimov_i_multiplication_of_sparse_matrices_CRS_storage_format/seq/include/ops_seq.hpp"
+#include "yakimov_i_multiplication_of_sparse_matrices_crs_storage_format/seq/include/ops_seq.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -8,9 +8,9 @@
 #include <string>
 #include <vector>
 
-#include "yakimov_i_multiplication_of_sparse_matrices_CRS_storage_format/common/include/common.hpp"
+#include "yakimov_i_multiplication_of_sparse_matrices_crs_storage_format/common/include/common.hpp"
 
-namespace yakimov_i_multiplication_of_sparse_matrices_CRS_storage_format {
+namespace yakimov_i_multiplication_of_sparse_matrices_crs_storage_format {
 
 namespace {
 
@@ -75,23 +75,19 @@ bool ReadMatrixFromFileImpl(const std::string &filename, MatrixCRS &matrix) {
   return success;
 }
 
-void ProcessRowMultiplication(const MatrixCRS &A, const MatrixCRS &B, int row_index, std::vector<double> &row_values) {
-  std::fill(row_values.begin(), row_values.end(), 0.0);
-
-  int row_start_A = A.row_pointers[static_cast<size_t>(row_index)];
-  int row_end_A = A.row_pointers[static_cast<size_t>(row_index + 1)];
-
-  for (int k = row_start_A; k < row_end_A; ++k) {
-    int col_A = A.col_indices[static_cast<size_t>(k)];
-    double val_A = A.values[static_cast<size_t>(k)];
-
-    int row_start_B = B.row_pointers[static_cast<size_t>(col_A)];
-    int row_end_B = B.row_pointers[static_cast<size_t>(col_A + 1)];
-
-    for (int l = row_start_B; l < row_end_B; ++l) {
-      int col_B = B.col_indices[static_cast<size_t>(l)];
-      double val_B = B.values[static_cast<size_t>(l)];
-      row_values[static_cast<size_t>(col_B)] += val_A * val_B;
+void ProcessRowMultiplication(const MatrixCRS &a, const MatrixCRS &b, int row_index, std::vector<double> &row_values) {
+  std::ranges::fill(row_values, 0.0);
+  int row_start_a = a.row_pointers[static_cast<std::size_t>(row_index)];
+  int row_end_a = a.row_pointers[static_cast<std::size_t>(row_index + 1)];
+  for (int k = row_start_a; k < row_end_a; ++k) {
+    int col_a = a.col_indices[static_cast<std::size_t>(k)];
+    double val_a = a.values[static_cast<std::size_t>(k)];
+    int row_start_b = b.row_pointers[static_cast<std::size_t>(col_a)];
+    int row_end_b = b.row_pointers[static_cast<std::size_t>(col_a + 1)];
+    for (int idx = row_start_b; idx < row_end_b; ++idx) {
+      int col_b = b.col_indices[static_cast<std::size_t>(idx)];
+      double val_b = b.values[static_cast<std::size_t>(idx)];
+      row_values[static_cast<std::size_t>(col_b)] += val_a * val_b;
     }
   }
 }
@@ -136,8 +132,7 @@ double SumMatrixElementsImpl(const MatrixCRS &matrix) {
 
 }  // namespace
 
-YakimovIMultiplicationOfSparseMatricesSEQ::YakimovIMultiplicationOfSparseMatricesSEQ(const InType &in)
-    : matrix_A_(), matrix_B_(), result_matrix_(), matrix_A_filename_(""), matrix_B_filename_("") {
+YakimovIMultiplicationOfSparseMatricesSEQ::YakimovIMultiplicationOfSparseMatricesSEQ(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
   GetOutput() = 0.0;
@@ -148,7 +143,7 @@ YakimovIMultiplicationOfSparseMatricesSEQ::YakimovIMultiplicationOfSparseMatrice
   }
 
   std::string base_dir =
-      base_path.string() + "/tasks/yakimov_i_multiplication_of_sparse_matrices_CRS_storage_format/data/";
+      base_path.string() + "/tasks/yakimov_i_multiplication_of_sparse_matrices_crs_storage_format/data/";
   matrix_A_filename_ = base_dir + "A_" + std::to_string(GetInput()) + ".txt";
   matrix_B_filename_ = base_dir + "B_" + std::to_string(GetInput()) + ".txt";
 }
@@ -162,8 +157,8 @@ bool YakimovIMultiplicationOfSparseMatricesSEQ::ValidationImpl() {
 bool YakimovIMultiplicationOfSparseMatricesSEQ::PreProcessingImpl() {
   bool success = true;
 
-  success = success && ReadMatrixFromFile(matrix_A_filename_, matrix_A_);
-  success = success && ReadMatrixFromFile(matrix_B_filename_, matrix_B_);
+  success = success && ReadMatrixFromFileImpl(matrix_A_filename_, matrix_A_);
+  success = success && ReadMatrixFromFileImpl(matrix_B_filename_, matrix_B_);
 
   if (!success) {
     return false;
@@ -176,27 +171,15 @@ bool YakimovIMultiplicationOfSparseMatricesSEQ::PreProcessingImpl() {
   return true;
 }
 
-bool YakimovIMultiplicationOfSparseMatricesSEQ::ReadMatrixFromFile(const std::string &filename, MatrixCRS &matrix) {
-  return ReadMatrixFromFileImpl(filename, matrix);
-}
-
-MatrixCRS YakimovIMultiplicationOfSparseMatricesSEQ::MultiplyMatrices(const MatrixCRS &A, const MatrixCRS &B) {
-  return MultiplyMatricesImpl(A, B);
-}
-
 bool YakimovIMultiplicationOfSparseMatricesSEQ::RunImpl() {
-  result_matrix_ = MultiplyMatrices(matrix_A_, matrix_B_);
+  result_matrix_ = MultiplyMatricesImpl(matrix_A_, matrix_B_);
   return true;
 }
 
-double YakimovIMultiplicationOfSparseMatricesSEQ::SumMatrixElements(const MatrixCRS &matrix) {
-  return SumMatrixElementsImpl(matrix);
-}
-
 bool YakimovIMultiplicationOfSparseMatricesSEQ::PostProcessingImpl() {
-  double sum = SumMatrixElements(result_matrix_);
+  double sum = SumMatrixElementsImpl(result_matrix_);
   GetOutput() = sum;
   return true;
 }
 
-}  // namespace yakimov_i_multiplication_of_sparse_matrices_CRS_storage_format
+}  // namespace yakimov_i_multiplication_of_sparse_matrices_crs_storage_format

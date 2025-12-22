@@ -7,11 +7,11 @@
 
 #include "util/include/func_test_util.hpp"
 #include "util/include/util.hpp"
-#include "yakimov_i_multiplication_of_sparse_matrices_CRS_storage_format/common/include/common.hpp"
-#include "yakimov_i_multiplication_of_sparse_matrices_CRS_storage_format/mpi/include/ops_mpi.hpp"
-#include "yakimov_i_multiplication_of_sparse_matrices_CRS_storage_format/seq/include/ops_seq.hpp"
+#include "yakimov_i_multiplication_of_sparse_matrices_crs_storage_format/common/include/common.hpp"
+#include "yakimov_i_multiplication_of_sparse_matrices_crs_storage_format/mpi/include/ops_mpi.hpp"
+#include "yakimov_i_multiplication_of_sparse_matrices_crs_storage_format/seq/include/ops_seq.hpp"
 
-namespace yakimov_i_multiplication_of_sparse_matrices_CRS_storage_format {
+namespace yakimov_i_multiplication_of_sparse_matrices_crs_storage_format {
 
 class YakimovIMultiplicationOfSparseMatricesFuncTests : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
  public:
@@ -47,9 +47,9 @@ const std::array<TestType, 11> kAllTestParam = {
 
 const auto kTestTasksList =
     std::tuple_cat(ppc::util::AddFuncTask<YakimovIMultiplicationOfSparseMatricesMPI, InType>(
-                       kAllTestParam, PPC_SETTINGS_yakimov_i_multiplication_of_sparse_matrices_CRS_storage_format),
+                       kAllTestParam, PPC_SETTINGS_yakimov_i_multiplication_of_sparse_matrices_crs_storage_format),
                    ppc::util::AddFuncTask<YakimovIMultiplicationOfSparseMatricesSEQ, InType>(
-                       kAllTestParam, PPC_SETTINGS_yakimov_i_multiplication_of_sparse_matrices_CRS_storage_format));
+                       kAllTestParam, PPC_SETTINGS_yakimov_i_multiplication_of_sparse_matrices_crs_storage_format));
 
 const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
 
@@ -61,4 +61,4 @@ INSTANTIATE_TEST_SUITE_P(MatrixMultiplicationTests, YakimovIMultiplicationOfSpar
 
 }  // namespace
 
-}  // namespace yakimov_i_multiplication_of_sparse_matrices_CRS_storage_format
+}  // namespace yakimov_i_multiplication_of_sparse_matrices_crs_storage_format

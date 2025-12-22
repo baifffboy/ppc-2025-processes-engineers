@@ -1,4 +1,4 @@
-#include "yakimov_i_multiplication_of_sparse_matrices_CRS_storage_format/mpi/include/ops_mpi.hpp"
+#include "yakimov_i_multiplication_of_sparse_matrices_crs_storage_format/mpi/include/ops_mpi.hpp"
 
 #include <mpi.h>
 
@@ -11,9 +11,9 @@
 #include <string>
 #include <vector>
 
-#include "yakimov_i_multiplication_of_sparse_matrices_CRS_storage_format/common/include/common.hpp"
+#include "yakimov_i_multiplication_of_sparse_matrices_crs_storage_format/common/include/common.hpp"
 
-namespace yakimov_i_multiplication_of_sparse_matrices_CRS_storage_format {
+namespace yakimov_i_multiplication_of_sparse_matrices_crs_storage_format {
 
 namespace {
 
@@ -81,10 +81,10 @@ bool ReadMatrixFromFileImpl(const std::string &filename, MatrixCRS &matrix) {
 void ProcessRowMultiplication(const MatrixCRS &A, const MatrixCRS &B, int row_index, std::vector<double> &row_values) {
   std::fill(row_values.begin(), row_values.end(), 0.0);
 
-  int row_start_A = A.row_pointers[static_cast<size_t>(row_index)];
+  int row_start_a = A.row_pointers[static_cast<size_t>(row_index)];
   int row_end_A = A.row_pointers[static_cast<size_t>(row_index + 1)];
 
-  for (int k = row_start_A; k < row_end_A; ++k) {
+  for (int k = row_start_a; k < row_end_A; ++k) {
     int col_A = A.col_indices[static_cast<size_t>(k)];
     double val_A = A.values[static_cast<size_t>(k)];
 
@@ -227,28 +227,28 @@ void ReceiveRowDataFromMaster(int num_rows, std::vector<int> &row_nnz, std::vect
 }
 
 void BuildLocalMatrixFromReceivedData(const std::vector<int> &row_nnz, const std::vector<int> &col_indices,
-                                      const std::vector<double> &values, MatrixCRS &local_A_rows) {
-  local_A_rows.row_pointers.resize(static_cast<size_t>(local_A_rows.rows + 1));
-  local_A_rows.row_pointers[0] = 0;
+                                      const std::vector<double> &values, MatrixCRS &local_a_rows) {
+  local_a_rows.row_pointers.resize(static_cast<size_t>(local_a_rows.rows + 1));
+  local_a_rows.row_pointers[0] = 0;
 
   size_t col_idx_pos = 0;
   size_t val_pos = 0;
 
-  for (int i = 0; i < local_A_rows.rows; ++i) {
+  for (int i = 0; i < local_a_rows.rows; ++i) {
     int nnz = row_nnz[static_cast<size_t>(i)];
 
     for (int j = 0; j < nnz; ++j) {
-      local_A_rows.col_indices.push_back(col_indices[col_idx_pos]);
+      local_a_rows.col_indices.push_back(col_indices[col_idx_pos]);
       col_idx_pos++;
-      local_A_rows.values.push_back(values[val_pos]);
+      local_a_rows.values.push_back(values[val_pos]);
       val_pos++;
     }
 
-    local_A_rows.row_pointers[i + 1] = local_A_rows.row_pointers[i] + nnz;
+    local_a_rows.row_pointers[i + 1] = local_a_rows.row_pointers[i] + nnz;
   }
 }
 
-void ReceiveMatrixDataFromMaster(int rank, int size, MatrixCRS &local_A_rows, std::vector<int> &local_rows,
+void ReceiveMatrixDataFromMaster(int rank, int size, MatrixCRS &local_a_rows, std::vector<int> &local_rows,
                                  int rows_A) {
   int num_rows = 0;
   MPI_Recv(&num_rows, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
@@ -259,38 +259,38 @@ void ReceiveMatrixDataFromMaster(int rank, int size, MatrixCRS &local_A_rows, st
     std::vector<int> col_indices;
     std::vector<double> values;
 
-    local_A_rows.rows = num_rows;
+    local_a_rows.rows = num_rows;
 
     ReceiveRowDataFromMaster(num_rows, row_nnz, col_indices, values);
-    BuildLocalMatrixFromReceivedData(row_nnz, col_indices, values, local_A_rows);
+    BuildLocalMatrixFromReceivedData(row_nnz, col_indices, values, local_a_rows);
   }
 }
 
-void ProcessLocalRowForInitialization(int global_row, const MatrixCRS &matrix_A, MatrixCRS &local_A_rows,
+void ProcessLocalRowForInitialization(int global_row, const MatrixCRS &matrix_A, MatrixCRS &local_a_rows,
                                       size_t local_index) {
   int row_start = matrix_A.row_pointers[static_cast<size_t>(global_row)];
   int row_end = matrix_A.row_pointers[static_cast<size_t>(global_row + 1)];
   int row_nnz_count = row_end - row_start;
 
   for (int j = row_start; j < row_end; ++j) {
-    local_A_rows.col_indices.push_back(matrix_A.col_indices[static_cast<size_t>(j)]);
-    local_A_rows.values.push_back(matrix_A.values[static_cast<size_t>(j)]);
+    local_a_rows.col_indices.push_back(matrix_A.col_indices[static_cast<size_t>(j)]);
+    local_a_rows.values.push_back(matrix_A.values[static_cast<size_t>(j)]);
   }
 
-  local_A_rows.row_pointers[local_index + 1] = local_A_rows.row_pointers[local_index] + row_nnz_count;
+  local_a_rows.row_pointers[local_index + 1] = local_a_rows.row_pointers[local_index] + row_nnz_count;
 }
 
-void InitializeLocalRowsOnMaster(int rank, int size, MatrixCRS &matrix_A, MatrixCRS &local_A_rows,
+void InitializeLocalRowsOnMaster(int rank, int size, MatrixCRS &matrix_A, MatrixCRS &local_a_rows,
                                  std::vector<int> &local_rows) {
   local_rows = GetLocalRowsImpl(rank, size, matrix_A.rows);
-  local_A_rows.rows = static_cast<int>(local_rows.size());
-  local_A_rows.cols = matrix_A.cols;
-  local_A_rows.row_pointers.resize(static_cast<size_t>(local_A_rows.rows + 1));
-  local_A_rows.row_pointers[0] = 0;
+  local_a_rows.rows = static_cast<int>(local_rows.size());
+  local_a_rows.cols = matrix_A.cols;
+  local_a_rows.row_pointers.resize(static_cast<size_t>(local_a_rows.rows + 1));
+  local_a_rows.row_pointers[0] = 0;
 
   for (size_t i = 0; i < local_rows.size(); ++i) {
     int global_row = local_rows[i];
-    ProcessLocalRowForInitialization(global_row, matrix_A, local_A_rows, i);
+    ProcessLocalRowForInitialization(global_row, matrix_A, local_a_rows, i);
   }
 }
 
@@ -446,19 +446,7 @@ void GatherRowData(int rank, int size, const MatrixCRS &local_result, MatrixCRS 
 
 }  // namespace
 
-YakimovIMultiplicationOfSparseMatricesMPI::YakimovIMultiplicationOfSparseMatricesMPI(const InType &in)
-    : matrix_A_(),
-      matrix_B_(),
-      result_matrix_(),
-      local_A_rows_(),
-      local_result_(),
-      matrix_A_filename_(""),
-      matrix_B_filename_(""),
-      local_rows_(),
-      rows_A_(0),
-      cols_A_(0),
-      rows_B_(0),
-      cols_B_(0) {
+YakimovIMultiplicationOfSparseMatricesMPI::YakimovIMultiplicationOfSparseMatricesMPI(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
   GetOutput() = 0.0;
@@ -469,7 +457,7 @@ YakimovIMultiplicationOfSparseMatricesMPI::YakimovIMultiplicationOfSparseMatrice
   }
 
   std::string base_dir =
-      base_path.string() + "/tasks/yakimov_i_multiplication_of_sparse_matrices_CRS_storage_format/data/";
+      base_path.string() + "/tasks/yakimov_i_multiplication_of_sparse_matrices_crs_storage_format/data/";
   matrix_A_filename_ = base_dir + "A_" + std::to_string(GetInput()) + ".txt";
   matrix_B_filename_ = base_dir + "B_" + std::to_string(GetInput()) + ".txt";
 }
@@ -553,9 +541,9 @@ void YakimovIMultiplicationOfSparseMatricesMPI::DistributeMatrixA() {
       SendMatrixDataToProcess(proc, proc_rows, matrix_A_);
     }
 
-    InitializeLocalRowsOnMaster(rank, size, matrix_A_, local_A_rows_, local_rows_);
+    InitializeLocalRowsOnMaster(rank, size, matrix_A_, local_a_rows_, local_rows_);
   } else {
-    ReceiveMatrixDataFromMaster(rank, size, local_A_rows_, local_rows_, rows_A_);
+    ReceiveMatrixDataFromMaster(rank, size, local_a_rows_, local_rows_, rows_A_);
   }
 }
 
@@ -595,9 +583,9 @@ void YakimovIMultiplicationOfSparseMatricesMPI::DistributeMatrixB() {
   }
 }
 
-MatrixCRS YakimovIMultiplicationOfSparseMatricesMPI::MultiplyLocalRows(const MatrixCRS &local_A_rows,
+MatrixCRS YakimovIMultiplicationOfSparseMatricesMPI::MultiplyLocalRows(const MatrixCRS &local_a_rows,
                                                                        const MatrixCRS &B) {
-  return MultiplyMatricesImpl(local_A_rows, B);
+  return MultiplyMatricesImpl(local_a_rows, B);
 }
 
 void YakimovIMultiplicationOfSparseMatricesMPI::GatherResults() {
@@ -641,7 +629,7 @@ bool YakimovIMultiplicationOfSparseMatricesMPI::RunImpl() {
   DistributeMatrixB();
   MPI_Barrier(MPI_COMM_WORLD);
 
-  local_result_ = MultiplyLocalRows(local_A_rows_, matrix_B_);
+  local_result_ = MultiplyLocalRows(local_a_rows_, matrix_B_);
   MPI_Barrier(MPI_COMM_WORLD);
 
   GatherResults();
@@ -671,4 +659,4 @@ bool YakimovIMultiplicationOfSparseMatricesMPI::PostProcessingImpl() {
   return true;
 }
 
-}  // namespace yakimov_i_multiplication_of_sparse_matrices_CRS_storage_format
+}  // namespace yakimov_i_multiplication_of_sparse_matrices_crs_storage_format

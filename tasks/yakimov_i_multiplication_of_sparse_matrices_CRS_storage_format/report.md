@@ -21,10 +21,10 @@
 '''for (int i = 0; i < A.rows; ++i) {
     std::fill(row_values.begin(), row_values.end(), 0.0);
     
-    int row_start_A = A.row_pointers[i];
+    int row_start_a = A.row_pointers[i];
     int row_end_A = A.row_pointers[i + 1];
     
-    for (int k = row_start_A; k < row_end_A; ++k) {
+    for (int k = row_start_a; k < row_end_A; ++k) {
         int col_A = A.col_indices[k];
         double val_A = A.values[k];
         
@@ -64,7 +64,7 @@ Rank 1..N-1: рабочие процессы (обработка своих бл
 ### Структура кода:
 Используем команду "tree tasks/yakimov_i_max_values_in_matrix_rows/" для того чтобы узнать структуру проекта:
 
-tasks/yakimov_i_multiplication_of_sparse_matrices_CRS_storage_format/
+tasks/yakimov_i_multiplication_of_sparse_matrices_crs_storage_format/
 .
 ├── common
 │   └── include
@@ -222,7 +222,7 @@ Efficiency = Speedup / Count * 100%
 - Алгоритм хорошо масштабируется для больших матриц
 - Основное ограничение - коммуникационные затраты
 
-## 9. References
+## 9. References 
 1. OpenMPI документация: <https://www.open-mpi.org/>
 2. MPI стандарт: <https://www.mpi-forum.org/>
 3. Курс параллельного программирования: материалы курса <https://learning-process.github.io/parallel_programming_course/ru/common_information/report.html>

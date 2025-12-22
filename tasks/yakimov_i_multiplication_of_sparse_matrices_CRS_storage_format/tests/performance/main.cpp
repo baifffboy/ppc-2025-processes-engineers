@@ -4,11 +4,11 @@
 #include <cstddef>
 
 #include "util/include/perf_test_util.hpp"
-#include "yakimov_i_multiplication_of_sparse_matrices_CRS_storage_format/common/include/common.hpp"
-#include "yakimov_i_multiplication_of_sparse_matrices_CRS_storage_format/mpi/include/ops_mpi.hpp"
-#include "yakimov_i_multiplication_of_sparse_matrices_CRS_storage_format/seq/include/ops_seq.hpp"
+#include "yakimov_i_multiplication_of_sparse_matrices_crs_storage_format/common/include/common.hpp"
+#include "yakimov_i_multiplication_of_sparse_matrices_crs_storage_format/mpi/include/ops_mpi.hpp"
+#include "yakimov_i_multiplication_of_sparse_matrices_crs_storage_format/seq/include/ops_seq.hpp"
 
-namespace yakimov_i_multiplication_of_sparse_matrices_CRS_storage_format {
+namespace yakimov_i_multiplication_of_sparse_matrices_crs_storage_format {
 
 class YakimovIMultiplicationOfSparseMatricesPerfTests : public ppc::util::BaseRunPerfTests<InType, OutType> {
  protected:
@@ -32,7 +32,7 @@ TEST_P(YakimovIMultiplicationOfSparseMatricesPerfTests, RunPerfModes) {
 
 const auto kAllPerfTasks = ppc::util::MakeAllPerfTasks<InType, YakimovIMultiplicationOfSparseMatricesMPI,
                                                        YakimovIMultiplicationOfSparseMatricesSEQ>(
-    PPC_SETTINGS_yakimov_i_multiplication_of_sparse_matrices_CRS_storage_format);
+    PPC_SETTINGS_yakimov_i_multiplication_of_sparse_matrices_crs_storage_format);
 
 const auto kGtestValues = ppc::util::TupleToGTestValues(kAllPerfTasks);
 
@@ -40,4 +40,4 @@ const auto kPerfTestName = YakimovIMultiplicationOfSparseMatricesPerfTests::Cust
 
 INSTANTIATE_TEST_SUITE_P(RunModeTests, YakimovIMultiplicationOfSparseMatricesPerfTests, kGtestValues, kPerfTestName);
 
-}  // namespace yakimov_i_multiplication_of_sparse_matrices_CRS_storage_format
+}  // namespace yakimov_i_multiplication_of_sparse_matrices_crs_storage_format
