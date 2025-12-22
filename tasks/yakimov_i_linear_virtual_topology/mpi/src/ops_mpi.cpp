@@ -59,11 +59,7 @@ bool YakimovILinearVirtualTopologyMPI::PreProcessingImpl() {
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
   if (rank == 0) {
-    bool read_result = false;
-    read_result = ReadDataFromFile(data_filename_);
-    if (!read_result) {
-      return false;
-    }
+    ReadDataFromFile(data_filename_);
   }
 
   local_sum_ = 0;
@@ -72,11 +68,8 @@ bool YakimovILinearVirtualTopologyMPI::PreProcessingImpl() {
   return true;
 }
 
-bool YakimovILinearVirtualTopologyMPI::ReadDataFromFile(const std::string &filename) {
+void YakimovILinearVirtualTopologyMPI::ReadDataFromFile(const std::string &filename) {
   std::ifstream file(filename);
-  if (!file.is_open()) {
-    return false;
-  }
 
   int value = 0;
   data_.clear();
@@ -85,12 +78,7 @@ bool YakimovILinearVirtualTopologyMPI::ReadDataFromFile(const std::string &filen
     data_.push_back(value);
   }
 
-  if (data_.empty() || data_.size() % 3 != 0) {
-    return false;
-  }
-
   file.close();
-  return true;
 }
 
 void YakimovILinearVirtualTopologyMPI::CreateLinearTopology(MPI_Comm &linear_comm) {
@@ -133,10 +121,6 @@ bool YakimovILinearVirtualTopologyMPI::RunImpl() {
     data_size = static_cast<int>(data_.size());
   }
   MPI_Bcast(&data_size, 1, MPI_INT, 0, MPI_COMM_WORLD);
-
-  if (data_size <= 0) {
-    return false;
-  }
 
   if (rank != 0) {
     data_.resize(static_cast<size_t>(data_size));

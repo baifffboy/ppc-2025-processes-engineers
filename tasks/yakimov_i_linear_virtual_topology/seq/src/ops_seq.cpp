@@ -47,11 +47,7 @@ bool YakimovILinearVirtualTopologySEQ::ValidationImpl() {
 }
 
 bool YakimovILinearVirtualTopologySEQ::PreProcessingImpl() {
-  bool read_result = false;
-  read_result = ReadDataFromFile(data_filename_);
-  if (!read_result) {
-    return false;
-  }
+  ReadDataFromFile(data_filename_);
 
   process_values_.resize(static_cast<size_t>(kMaxProcesses));
   std::ranges::fill(process_values_, 0);
@@ -61,11 +57,8 @@ bool YakimovILinearVirtualTopologySEQ::PreProcessingImpl() {
   return true;
 }
 
-bool YakimovILinearVirtualTopologySEQ::ReadDataFromFile(const std::string &filename) {
+void YakimovILinearVirtualTopologySEQ::ReadDataFromFile(const std::string &filename) {
   std::ifstream file(filename);
-  if (!file.is_open()) {
-    return false;
-  }
   int value = 0;
   data_.clear();
 
@@ -73,12 +66,7 @@ bool YakimovILinearVirtualTopologySEQ::ReadDataFromFile(const std::string &filen
     data_.push_back(value);
   }
 
-  if (data_.empty() || data_.size() % 3 != 0) {
-    return false;
-  }
-
   file.close();
-  return true;
 }
 
 bool YakimovILinearVirtualTopologySEQ::RunImpl() {

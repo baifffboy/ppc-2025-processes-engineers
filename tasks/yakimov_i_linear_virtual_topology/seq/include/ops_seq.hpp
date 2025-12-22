@@ -20,7 +20,7 @@ class YakimovILinearVirtualTopologySEQ : public BaseTask {
   bool PreProcessingImpl() override;
   bool RunImpl() override;
   bool PostProcessingImpl() override;
-  bool ReadDataFromFile(const std::string &filename);
+  void ReadDataFromFile(const std::string &filename);
   void ProcessDataSequentially();
 
   std::vector<int> data_;
