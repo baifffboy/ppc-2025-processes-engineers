@@ -105,10 +105,18 @@ void CollectRowResult(const std::vector<double> &row_values, MatrixCRS &result, 
 
 MatrixCRS MultiplyMatricesImpl(const MatrixCRS &a, const MatrixCRS &b) {
   MatrixCRS result;
+
+  if (a.rows <= 0 || b.cols <= 0) {
+    return result;
+  }
+
   result.rows = a.rows;
   result.cols = b.cols;
   result.row_pointers.resize(static_cast<size_t>(result.rows) + 1);
-  result.row_pointers[0] = 0;
+
+  if (!result.row_pointers.empty()) {
+    result.row_pointers[0] = 0;
+  }
 
   std::vector<double> row_values(static_cast<size_t>(result.cols), 0.0);
 
