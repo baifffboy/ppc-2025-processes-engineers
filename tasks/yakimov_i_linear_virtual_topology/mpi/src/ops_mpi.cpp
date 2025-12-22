@@ -69,7 +69,6 @@ bool YakimovILinearVirtualTopologyMPI::PreProcessingImpl() {
 
   local_sum_ = 0;
   total_sum_ = 0;
-
   MPI_Barrier(MPI_COMM_WORLD);
   return true;
 }

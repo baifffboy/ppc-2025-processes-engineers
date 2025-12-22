@@ -65,7 +65,6 @@ bool YakimovILinearVirtualTopologySEQ::ReadDataFromFile(const std::string &filen
   if (!file.is_open()) {
     return false;
   }
-
   int value = 0;
   data_.clear();
 

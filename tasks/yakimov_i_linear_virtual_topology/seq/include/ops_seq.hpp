@@ -24,8 +24,8 @@ class YakimovILinearVirtualTopologySEQ : public BaseTask {
   bool ReadDataFromFile(const std::string &filename);
   void ProcessDataSequentially();
 
-  std::vector<int> data_;
-  std::vector<int> process_values_;
+  std::vector<int> data_{};
+  std::vector<int> process_values_{};
   int total_sum_{0};
   std::string data_filename_;
 };
