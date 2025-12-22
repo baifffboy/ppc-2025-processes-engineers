@@ -180,5 +180,4 @@ bool YakimovIMultiplicationOfSparseMatricesSEQ::PostProcessingImpl() {
   GetOutput() = sum;
   return true;
 }
-
 }  // namespace yakimov_i_multiplication_of_sparse_matrices_crs_storage_format
