@@ -3,21 +3,39 @@
 #include <mpi.h>
 
 #include <algorithm>
-#include <cmath>
 #include <cstddef>
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 #include <string>
+#include <vector>
 
 #include "yakimov_i_linear_virtual_topology/common/include/common.hpp"
 
 namespace yakimov_i_linear_virtual_topology {
 
+namespace {
+constexpr int kMaxProcesses = 20;
+
+bool IsValidProcess(int process_id) {
+  bool result = false;
+  result = (process_id >= 0) && (process_id < kMaxProcesses);
+  return result;
+}
+
+void ProcessTriplet(int sender, int receiver, int data_value, int rank, int &local_sum) {
+  if (IsValidProcess(sender) && IsValidProcess(receiver)) {
+    if (rank == receiver) {
+      local_sum += data_value;
+    }
+  }
+}
+}  // namespace
+
 YakimovILinearVirtualTopologyMPI::YakimovILinearVirtualTopologyMPI(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
-  GetOutput() = -1;
-
+  GetOutput() = 0;
   std::filesystem::path base_path = std::filesystem::current_path();
   while (base_path.filename() != "ppc-2025-processes-engineers") {
     base_path = base_path.parent_path();
@@ -29,39 +47,12 @@ YakimovILinearVirtualTopologyMPI::YakimovILinearVirtualTopologyMPI(const InType 
 bool YakimovILinearVirtualTopologyMPI::ValidationImpl() {
   int rank = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  return (rank == 0) ? (GetInput() > 0) : true;
-}
-
-bool YakimovILinearVirtualTopologyMPI::ReadOperationsFromFile(const std::string &filename) {
-  std::ifstream file(filename);
-  if (!file.is_open()) {
-    return false;
+  if (rank == 0) {
+    bool result = false;
+    result = (GetInput() > 0);
+    return result;
   }
-
-  int src_val = 0;
-  int dst_val = 0;
-  int data_val = 0;
-  while (file >> src_val >> dst_val >> data_val) {
-    operations_.push_back(src_val);
-    operations_.push_back(dst_val);
-    operations_.push_back(data_val);
-  }
-
-  file.close();
   return true;
-}
-
-void YakimovILinearVirtualTopologyMPI::BroadcastOperations() {
-  int rank = 0;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-  int op_count = static_cast<int>(operations_.size());
-  MPI_Bcast(&op_count, 1, MPI_INT, 0, MPI_COMM_WORLD);
-
-  if (rank != 0) {
-    operations_.resize(op_count);
-  }
-  MPI_Bcast(operations_.data(), op_count, MPI_INT, 0, MPI_COMM_WORLD);
 }
 
 bool YakimovILinearVirtualTopologyMPI::PreProcessingImpl() {
@@ -69,136 +60,112 @@ bool YakimovILinearVirtualTopologyMPI::PreProcessingImpl() {
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
   if (rank == 0) {
-    if (!ReadOperationsFromFile(data_filename_)) {
+    bool read_result = false;
+    read_result = ReadDataFromFile(data_filename_);
+    if (!read_result) {
       return false;
     }
   }
 
-  BroadcastOperations();
+  local_sum_ = 0;
+  total_sum_ = 0;
 
+  MPI_Barrier(MPI_COMM_WORLD);
   return true;
+}
+
+bool YakimovILinearVirtualTopologyMPI::ReadDataFromFile(const std::string &filename) {
+  std::ifstream file(filename);
+  if (!file.is_open()) {
+    return false;
+  }
+
+  int value = 0;
+  data_.clear();
+
+  while (file >> value) {
+    data_.push_back(value);
+  }
+
+  if (data_.empty() || data_.size() % 3 != 0) {
+    return false;
+  }
+
+  file.close();
+  return true;
+}
+
+void YakimovILinearVirtualTopologyMPI::CreateLinearTopology(MPI_Comm &linear_comm) {
+  MPI_Comm_dup(MPI_COMM_WORLD, &linear_comm);
+}
+
+void YakimovILinearVirtualTopologyMPI::ProcessDataInTopology(int rank, MPI_Comm &linear_comm) {
+  int rank_in_linear = 0;
+  int size_in_linear = 0;
+  MPI_Comm_rank(linear_comm, &rank_in_linear);
+  MPI_Comm_size(linear_comm, &size_in_linear);
+
+  for (size_t i = 0; i + 2 < data_.size(); i += 3) {
+    int sender = data_[i];
+    int receiver = data_[i + 1];
+    int data_value = data_[i + 2];
+
+    ProcessTriplet(sender, receiver, data_value, rank, local_sum_);
+  }
+
+  MPI_Barrier(linear_comm);
+}
+
+void YakimovILinearVirtualTopologyMPI::ExchangeDataInTopology(MPI_Comm &linear_comm) {
+  int all_sum = 0;
+  MPI_Allreduce(&local_sum_, &all_sum, 1, MPI_INT, MPI_SUM, linear_comm);
+  total_sum_ = all_sum;
+
+  MPI_Comm_free(&linear_comm);
 }
 
 bool YakimovILinearVirtualTopologyMPI::RunImpl() {
-  InitializeMPI();
+  int rank = 0;
+  int size = 0;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-  int local_total = ProcessAllOperations();
-  int global_total = CalculateGlobalTotal(local_total);
+  int data_size = 0;
+  if (rank == 0) {
+    data_size = static_cast<int>(data_.size());
+  }
+  MPI_Bcast(&data_size, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-  SetOutput(global_total);
+  if (data_size <= 0) {
+    return false;
+  }
+
+  if (rank != 0) {
+    data_.resize(static_cast<size_t>(data_size));
+  }
+
+  MPI_Bcast(data_.data(), data_size, MPI_INT, 0, MPI_COMM_WORLD);
+
+  MPI_Comm linear_comm;
+  CreateLinearTopology(linear_comm);
+  ProcessDataInTopology(rank, linear_comm);
+  ExchangeDataInTopology(linear_comm);
+
   return true;
 }
 
-void YakimovILinearVirtualTopologyMPI::InitializeMPI() {
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank_);
-  MPI_Comm_size(MPI_COMM_WORLD, &size_);
-  num_processes_ = size_;
-}
-
-int YakimovILinearVirtualTopologyMPI::ProcessAllOperations() {
-  int local_total = 0;
-
-  for (size_t i = 0; i < operations_.size(); i += 3) {
-    int src_val = operations_[i];
-    int dst_val = operations_[i + 1];
-    int data_val = operations_[i + 2];
-
-    local_total += ProcessSingleOperation(src_val, dst_val, data_val);
-    MPI_Barrier(MPI_COMM_WORLD);
-  }
-
-  return local_total;
-}
-
-int YakimovILinearVirtualTopologyMPI::ProcessSingleOperation(int src, int dst, int data) {
-  if (!IsValidOperation(src, dst)) {
-    return 0;
-  }
-
-  if (src == dst) {
-    return ProcessSameProcessOperation(src, data);
-  }
-
-  return ProcessDifferentProcessOperation(src, dst, data);
-}
-
-bool YakimovILinearVirtualTopologyMPI::IsValidOperation(int src, int dst) const {
-  return src < size_ && dst < size_ && src >= 0 && dst >= 0;
-}
-
-int YakimovILinearVirtualTopologyMPI::ProcessSameProcessOperation(int process_id, int data) const {
-  if (rank_ == process_id) {
-    return data;
-  }
-  return 0;
-}
-
-int YakimovILinearVirtualTopologyMPI::ProcessDifferentProcessOperation(int src, int dst, int data) {
-  int min_proc = std::min(src, dst);
-  int max_proc = std::max(src, dst);
-
-  if (rank_ < min_proc || rank_ > max_proc) {
-    return 0;
-  }
-
-  int direction = CalculateDirection(src, dst);
-  return ProcessDataTransfer(src, dst, data, direction);
-}
-
-int YakimovILinearVirtualTopologyMPI::CalculateDirection(int src, int dst) {
-  return (dst > src) ? 1 : -1;
-}
-
-int YakimovILinearVirtualTopologyMPI::ProcessDataTransfer(int src, int dst, int data, int direction) {
-  if (rank_ == src) {
-    SendDataToNextProcess(data, direction);
-    return 0;
-  }
-
-  if (rank_ == dst) {
-    return ReceiveDataFromPreviousProcess(direction);
-  }
-
-  return ForwardDataBetweenProcesses(direction);
-}
-
-void YakimovILinearVirtualTopologyMPI::SendDataToNextProcess(int data, int direction) const {
-  int next = rank_ + direction;
-  MPI_Send(&data, 1, MPI_INT, next, 0, MPI_COMM_WORLD);
-}
-
-int YakimovILinearVirtualTopologyMPI::ReceiveDataFromPreviousProcess(int direction) const {
-  int received = 0;
-  MPI_Status status;
-  int prev = rank_ - direction;
-
-  MPI_Recv(&received, 1, MPI_INT, prev, 0, MPI_COMM_WORLD, &status);
-  return received;
-}
-
-int YakimovILinearVirtualTopologyMPI::ForwardDataBetweenProcesses(int direction) const {
-  int received = 0;
-  MPI_Status status;
-  int prev = rank_ - direction;
-  int next = rank_ + direction;
-
-  MPI_Recv(&received, 1, MPI_INT, prev, 0, MPI_COMM_WORLD, &status);
-  MPI_Send(&received, 1, MPI_INT, next, 0, MPI_COMM_WORLD);
-  return 0;
-}
-
-int YakimovILinearVirtualTopologyMPI::CalculateGlobalTotal(int local_total) {
-  int global_total = 0;
-  MPI_Reduce(&local_total, &global_total, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-  MPI_Bcast(&global_total, 1, MPI_INT, 0, MPI_COMM_WORLD);
-  return global_total;
-}
-
-void YakimovILinearVirtualTopologyMPI::SetOutput(int global_total) {
-  GetOutput() = std::abs(global_total);
-}
-
 bool YakimovILinearVirtualTopologyMPI::PostProcessingImpl() {
+  int rank = 0;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+  if (rank == 0) {
+    GetOutput() = total_sum_;
+  }
+
+  OutType final_result = GetOutput();
+  MPI_Bcast(&final_result, 1, MPI_INT, 0, MPI_COMM_WORLD);
+  GetOutput() = final_result;
+
   return true;
 }
 

@@ -1,5 +1,8 @@
 #pragma once
 
+#include <mpi.h>
+
+#include <cstddef>
 #include <string>
 #include <vector>
 
@@ -20,28 +23,15 @@ class YakimovILinearVirtualTopologyMPI : public BaseTask {
   bool PreProcessingImpl() override;
   bool RunImpl() override;
   bool PostProcessingImpl() override;
+  bool ReadDataFromFile(const std::string &filename);
+  void CreateLinearTopology(MPI_Comm &linear_comm);
+  void ProcessDataInTopology(int rank, MPI_Comm &linear_comm);
+  void ExchangeDataInTopology(MPI_Comm &linear_comm);
 
-  bool ReadOperationsFromFile(const std::string &filename);
-  void BroadcastOperations();
-  void InitializeMPI();
-  int ProcessAllOperations();
-  int ProcessSingleOperation(int src, int dst, int data);
-  [[nodiscard]] bool IsValidOperation(int src, int dst) const;
-  [[nodiscard]] int ProcessSameProcessOperation(int process_id, int data) const;
-  int ProcessDifferentProcessOperation(int src, int dst, int data);
-  [[nodiscard]] static int CalculateDirection(int src, int dst);
-  int ProcessDataTransfer(int src, int dst, int data, int direction);
-  void SendDataToNextProcess(int data, int direction) const;
-  [[nodiscard]] int ReceiveDataFromPreviousProcess(int direction) const;
-  [[nodiscard]] int ForwardDataBetweenProcesses(int direction) const;
-  static int CalculateGlobalTotal(int local_total);
-  void SetOutput(int global_total);
-
-  std::vector<int> operations_;
-  int num_processes_{0};
+  std::vector<int> data_;
+  int local_sum_{0};
+  int total_sum_{0};
   std::string data_filename_;
-  int rank_{0};
-  int size_{0};
 };
 
 }  // namespace yakimov_i_linear_virtual_topology

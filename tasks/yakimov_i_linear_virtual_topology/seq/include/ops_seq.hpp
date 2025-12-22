@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <string>
 #include <vector>
 
@@ -20,16 +21,12 @@ class YakimovILinearVirtualTopologySEQ : public BaseTask {
   bool PreProcessingImpl() override;
   bool RunImpl() override;
   bool PostProcessingImpl() override;
+  bool ReadDataFromFile(const std::string &filename);
+  void ProcessDataSequentially();
 
-  bool ReadOperationsFromFile(const std::string &filename);
-  void ProcessAllOperations(std::vector<int> &process_data, int &total_received);
-  [[nodiscard]] bool IsValidProcessId(int process_id) const;
-  void ProcessSingleOperation(int src, int dst, int data, std::vector<int> &process_data, int &total_received);
-  void HandleSameProcessTransfer(int process_id, int data, std::vector<int> &process_data, int &total_received);
-  void HandleDifferentProcessTransfer(int src, int dst, int data, std::vector<int> &process_data, int &total_received);
-
-  std::vector<int> operations_;
-  int num_processes_{0};
+  std::vector<int> data_;
+  std::vector<int> process_values_;
+  int total_sum_{0};
   std::string data_filename_;
 };
 

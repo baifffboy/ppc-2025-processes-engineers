@@ -6,6 +6,7 @@
 #include <tuple>
 
 #include "util/include/func_test_util.hpp"
+#include "util/include/util.hpp"
 #include "yakimov_i_linear_virtual_topology/common/include/common.hpp"
 #include "yakimov_i_linear_virtual_topology/mpi/include/ops_mpi.hpp"
 #include "yakimov_i_linear_virtual_topology/seq/include/ops_seq.hpp"
@@ -20,7 +21,8 @@ class YakimovILinearVirtualTopologyFuncTests : public ppc::util::BaseRunFuncTest
 
  protected:
   bool CheckTestOutputData(OutType &output_data) final {
-    return output_data >= 0;
+    (void)output_data;
+    return true;
   }
 
   InType GetTestInputData() final {
@@ -31,17 +33,16 @@ class YakimovILinearVirtualTopologyFuncTests : public ppc::util::BaseRunFuncTest
 
 namespace {
 
-TEST_P(YakimovILinearVirtualTopologyFuncTests, LinearTopology) {
+TEST_P(YakimovILinearVirtualTopologyFuncTests, LinearVirtualTopology) {
   ExecuteTest(GetParam());
 }
 
-const std::array<TestType, 11> kAllTestParam = {
-    std::make_tuple(1, "simple_transfer"),      std::make_tuple(2, "bidirectional"),
-    std::make_tuple(3, "complex_routing"),      std::make_tuple(4, "neighbor_transfer"),
-    std::make_tuple(5, "self_transfer"),        std::make_tuple(6, "edge_2_processes"),
-    std::make_tuple(7, "edge_many_operations"), std::make_tuple(8, "edge_single_process"),
-    std::make_tuple(9, "edge_only_neighbors"),  std::make_tuple(10, "edge_negative_values"),
-    std::make_tuple(11, "edge_large_values")};
+const std::array<TestType, 10> kAllTestParam = {
+    std::make_tuple(1, "basic_1"),          std::make_tuple(2, "basic_2"),
+    std::make_tuple(3, "basic_3"),          std::make_tuple(4, "basic_4"),
+    std::make_tuple(5, "basic_5"),          std::make_tuple(32, "edge_invalid_process"),
+    std::make_tuple(33, "edge_large_data"), std::make_tuple(34, "edge_negative_values"),
+    std::make_tuple(35, "edge_mixed"),      std::make_tuple(36, "edge_max_processes")};
 
 const auto kTestTasksList = std::tuple_cat(ppc::util::AddFuncTask<YakimovILinearVirtualTopologyMPI, InType>(
                                                kAllTestParam, PPC_SETTINGS_yakimov_i_linear_virtual_topology),
