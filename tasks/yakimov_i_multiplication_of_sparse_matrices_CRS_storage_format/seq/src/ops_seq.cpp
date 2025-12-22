@@ -167,7 +167,6 @@ bool YakimovIMultiplicationOfSparseMatricesSEQ::PreProcessingImpl() {
   if (matrix_A_.cols != matrix_B_.rows) {
     return false;
   }
-
   return true;
 }
 
