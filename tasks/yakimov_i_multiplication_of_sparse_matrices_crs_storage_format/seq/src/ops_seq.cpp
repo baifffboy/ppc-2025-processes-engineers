@@ -19,11 +19,7 @@ bool ReadDimensions(std::ifstream &file, MatrixCRS &matrix) {
   file >> matrix.rows;
   file >> matrix.cols;
 
-  if (matrix.rows <= 0) {
-    success = false;
-  }
-
-  if (matrix.cols <= 0) {
+  if (matrix.rows <= 0 || matrix.cols <= 0) {
     success = false;
   }
 
@@ -54,15 +50,8 @@ bool ReadRowData(std::ifstream &file, MatrixCRS &matrix, int row_index) {
 
 bool ReadMatrixFromFileImpl(const std::string &filename, MatrixCRS &matrix) {
   std::ifstream file(filename);
-  if (!file.is_open()) {
-    return false;
-  }
 
   bool success = ReadDimensions(file, matrix);
-  if (!success) {
-    file.close();
-    return false;
-  }
 
   matrix.row_pointers.resize(static_cast<size_t>(matrix.rows) + 1);
   matrix.row_pointers[0] = 0;
