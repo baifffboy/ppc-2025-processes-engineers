@@ -59,7 +59,6 @@ bool ReadMatrixFromFileImpl(const std::string &filename, MatrixCRS &matrix) {
   for (int i = 0; i < matrix.rows; ++i) {
     success = success && ReadRowData(file, matrix, i);
   }
-
   file.close();
   return success;
 }
