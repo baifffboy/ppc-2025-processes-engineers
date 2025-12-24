@@ -5,6 +5,8 @@
 #include <cstddef>
 #include <string>
 #include <tuple>
+#include <unordered_map>
+#include <utility>
 
 #include "util/include/func_test_util.hpp"
 #include "util/include/util.hpp"
