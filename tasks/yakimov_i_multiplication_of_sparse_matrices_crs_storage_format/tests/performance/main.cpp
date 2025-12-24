@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <array>
+#include <cmath>
 #include <cstddef>
 
 #include "util/include/perf_test_util.hpp"
@@ -13,8 +14,7 @@ namespace yakimov_i_multiplication_of_sparse_matrices_crs_storage_format {
 class YakimovIMultiplicationOfSparseMatricesPerfTests : public ppc::util::BaseRunPerfTests<InType, OutType> {
  protected:
   bool CheckTestOutputData(OutType &output_data) final {
-    static_cast<void>(output_data);  // Избегаем предупреждения о неиспользуемом параметре
-    return true;                     // Для умножения матриц результат может быть нулевым
+    return std::isfinite(output_data);
   }
 
   InType GetTestInputData() final {

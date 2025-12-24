@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 
+#include "../../../../ppc-2025-processes-engineers/modules/util/include/util.hpp"
 #include "yakimov_i_multiplication_of_sparse_matrices_crs_storage_format/common/include/common.hpp"
 
 namespace yakimov_i_multiplication_of_sparse_matrices_crs_storage_format {
@@ -441,15 +442,10 @@ YakimovIMultiplicationOfSparseMatricesMPI::YakimovIMultiplicationOfSparseMatrice
   GetInput() = in;
   GetOutput() = 0.0;
 
-  std::filesystem::path base_path = std::filesystem::current_path();
-  while (base_path.filename() != "ppc-2025-processes-engineers") {
-    base_path = base_path.parent_path();
-  }
-
-  std::string base_dir =
-      base_path.string() + "/tasks/yakimov_i_multiplication_of_sparse_matrices_crs_storage_format/data/";
-  matrix_A_filename_ = base_dir + "A_" + std::to_string(GetInput()) + ".txt";
-  matrix_B_filename_ = base_dir + "B_" + std::to_string(GetInput()) + ".txt";
+  matrix_A_filename_ = ppc::util::GetAbsoluteTaskPath("yakimov_i_multiplication_of_sparse_matrices_crs_storage_format",
+                                                      "A_" + std::to_string(GetInput()) + ".txt");
+  matrix_B_filename_ = ppc::util::GetAbsoluteTaskPath("yakimov_i_multiplication_of_sparse_matrices_crs_storage_format",
+                                                      "B_" + std::to_string(GetInput()) + ".txt");
 }
 
 bool YakimovIMultiplicationOfSparseMatricesMPI::ValidationImpl() {

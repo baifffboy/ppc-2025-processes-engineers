@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <array>
+#include <cmath>
 #include <cstddef>
 #include <string>
 #include <tuple>
@@ -21,8 +22,35 @@ class YakimovIMultiplicationOfSparseMatricesFuncTests : public ppc::util::BaseRu
 
  protected:
   bool CheckTestOutputData(OutType &output_data) final {
-    static_cast<void>(output_data);  // Избегаем предупреждения о неиспользуемом параметре
-    return true;                     // Для умножения матриц результат может быть нулевым
+    if (!std::isfinite(output_data)) {
+      return false;
+    }
+    TestType params = std::get<static_cast<std::size_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
+    InType test_id = std::get<0>(params);
+    static const std::unordered_map<InType, std::pair<double, double>> kExpectedResults = {
+        // значения предподсчитаны в сторонней программе для функциональных тестов
+        {1, {723.404, 0.1}},     // small_square
+        {2, {0.0, 1e-9}},        // rectangular_2x4
+        {3, {3728.58, 0.1}},     // rectangular_4x2
+        {4, {-5100.66, 0.1}},    // medium_square
+        {5, {-7394.2, 0.1}},     // rectangular_3x5
+        {31, {0.0, 1e-9}},       // edge_1x1
+        {32, {-42992.0, 10.0}},  // edge_1x100
+        {33, {-9885.96, 0.1}},   // edge_100x1
+        {34, {704.299, 0.01}},   // edge_small
+        {35, {0.0, 1e-9}},       // edge_all_zeros
+        {36, {-3857.9, 0.1}}     // edge_high_density
+    };
+
+    auto it = kExpectedResults.find(test_id);
+    if (it == kExpectedResults.end()) {
+      return true;
+    }
+
+    const double expected = it->second.first;
+    const double tolerance = it->second.second;
+
+    return std::abs(output_data - expected) <= tolerance;
   }
 
   InType GetTestInputData() final {
